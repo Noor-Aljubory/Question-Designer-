@@ -32,10 +32,10 @@
         .page-border-ornate { border: 10px solid transparent !important; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cpath d='M0 0h10v10H0zM20 0h10v10H20zM0 20h10v10H0zM20 20h10v10H20z' fill='%23000000'/%3E%3C/svg%3E") 10 repeat !important; }
         @page { size: A4 portrait; margin: 0mm !important; }
         @media print {
-            html, body { width: 210mm !important; height: 297mm !important; background: white !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            html, body { width: 210mm !important; height: 296mm !important; max-height: 296mm !important; background: white !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .no-print, [class*="netlify"], iframe, footer, header { display: none !important; visibility: hidden !important; height: 0 !important; opacity: 0 !important; }
-            main { background: white !important; padding: 0 !important; margin: 0 !important; width: 210mm !important; height: 297mm !important; display: block !important; }
-            .a4-page { width: 210mm !important; height: 297mm !important; max-height: 297mm !important; box-shadow: none !important; padding: 12mm 14mm !important; margin: 0 !important; transform: none !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; box-sizing: border-box !important; page-break-after: avoid !important; break-after: avoid !important; page-break-inside: avoid !important; break-inside: avoid !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            main { background: white !important; padding: 0 !important; margin: 0 !important; width: 210mm !important; height: 296mm !important; max-height: 296mm !important; overflow: hidden !important; display: block !important; }
+            .a4-page { width: 210mm !important; height: 296mm !important; min-height: 0 !important; max-height: 296mm !important; box-shadow: none !important; padding: 12mm 14mm !important; margin: 0 !important; transform: none !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; box-sizing: border-box !important; page-break-after: avoid !important; break-after: avoid !important; page-break-inside: avoid !important; break-inside: avoid !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             #paperQuestionsContainer > * + * { margin-top: 10px !important; }
             #paperFooterDiv { margin-top: 36px !important; }
         }
@@ -332,6 +332,9 @@
         }
         function deleteQuestion(id) { questions = questions.filter(function(item) { return item.id !== id; }); renderEditor(); renderPaperQuestions(); }
         function moveQuestion(index, direction) { var targetIndex = index + direction; if (targetIndex >= 0 && targetIndex < questions.length) { var temp = questions[index]; questions[index] = questions[targetIndex]; questions[targetIndex] = temp; renderEditor(); renderPaperQuestions(); } }
+        var __origTitle = document.title;
+        window.addEventListener('beforeprint', function () { document.title = ' '; });
+        window.addEventListener('afterprint', function () { document.title = __origTitle; });
         function exportToPDF() { window.print(); }
         function getInlineCss(f) { return `font-size:${f.size}; font-weight:${f.bold ? 'bold' : 'normal'}; font-style:${f.italic ? 'italic' : 'normal'}; text-decoration:${f.underline ? 'underline' : 'none'}; color:${isColor ? f.color : '#000000'}; background-color:${isColor ? f.bgColor : 'transparent'};`; }
         function exportToWord() {
