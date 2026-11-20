@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exam-designer-pwa-v2';
+const CACHE_NAME = 'exam-designer-pwa-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -10,51 +10,46 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-  const url = new URL(event.request.url);
-  if (url.origin === self.location.origin) {
+  const store = (response) => {
+    if (response && (response.status === 200 || response.type === 'opaque')) {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+    }
+    return response;
+  };
+
+  // صفحة التطبيق: الشبكة أولاً (لتصل التحديثات فوراً) ثم النسخة المخزنة دون اتصال
+  if (req.mode === 'navigate' || (url.origin === self.location.origin && /\.(html|json)$/.test(url.pathname))) {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
-        return (
-          cached ||
-          fetch(event.request).then((response) => {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-            return response;
-          })
-        );
-      })
+      fetch(req).then(store).catch(() => caches.match(req).then((c) => c || caches.match('./index.html')))
     );
-  } else {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
+    return;
   }
+
+  // الخطوط والصور: من المخزن فوراً مع تحديثها في الخلفية
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      const fresh = fetch(req).then(store).catch(() => cached);
+      return cached || fresh;
+    })
+  );
 });
