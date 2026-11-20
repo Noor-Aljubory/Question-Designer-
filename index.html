@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصمم الأسئلة الامتحانية</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="مصمم الأسئلة">
+    <meta name="theme-color" content="#3730a3">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; margin: 0; padding: 0; }
+        .exam-paper-font-ar { font-family: 'Amiri', 'Traditional Arabic', serif; }
+        .exam-paper-font-en { font-family: 'Times New Roman', Times, serif; }
+        .a4-page { width: 210mm; min-height: 297mm; max-height: 297mm; padding: 12mm 14mm; margin: 0 auto; background: white; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15); box-sizing: border-box; position: relative; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; overflow: hidden !important; }
+        .signature-container { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-top: 42px !important; padding-top: 4px; page-break-inside: avoid !important; break-inside: avoid !important; }
+        .bw-mode { filter: grayscale(100%) !important; }
+        .bw-mode * { background-color: transparent !important; color: black !important; border-color: black !important; }
+        .page-border-none { border: none !important; }
+        .page-border-pdf-exact { border: 2.5px solid #000 !important; }
+        .page-border-simple { border: 1px solid #000 !important; }
+        .page-border-double { border: 4px double #000 !important; outline: 1px solid #000 !important; outline-offset: -3px; }
+        .page-border-dashed { border: 2px dashed #000 !important; }
+        .page-border-ornate { border: 10px solid transparent !important; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cpath d='M0 0h10v10H0zM20 0h10v10H20zM0 20h10v10H0zM20 20h10v10H20z' fill='%23000000'/%3E%3C/svg%3E") 10 repeat !important; }
+        @page { size: A4 portrait; margin: 0mm !important; }
+        @media print {
+            html, body { width: 210mm !important; height: 297mm !important; background: white !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print, [class*="netlify"], iframe, footer, header { display: none !important; visibility: hidden !important; height: 0 !important; opacity: 0 !important; }
+            main { background: white !important; padding: 0 !important; margin: 0 !important; width: 210mm !important; height: 297mm !important; display: block !important; }
+            .a4-page { width: 210mm !important; height: 297mm !important; max-height: 297mm !important; box-shadow: none !important; padding: 12mm 14mm !important; margin: 0 !important; transform: none !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; box-sizing: border-box !important; page-break-after: avoid !important; break-after: avoid !important; page-break-inside: avoid !important; break-inside: avoid !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            #paperQuestionsContainer > * + * { margin-top: 10px !important; }
+            #paperFooterDiv { margin-top: 36px !important; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 3px; }
+        .highlight-cyan { background-color: #00ffff; color: #000; padding: 2px 12px; font-weight: bold; }
+        .paper-content-area { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: flex-start; }
+        .question-block { border-bottom: 1px solid #000; padding-top: 9px; padding-bottom: 10px; }
+        .question-block:first-child { padding-top: 4px; }
+        .question-block:last-child { border-bottom: none; padding-bottom: 2px; }
+        .subitems-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; padding-right: 4px; padding-left: 4px; }
+        .subitem-row { line-height: 1.45; }
+        .shape-heart { background-color: transparent; color: #000; text-align: center; font-size: 13px; font-weight: bold; padding: 2px 10px; line-height: 1.35; }
+        .shape-rect { background-color: #eff6ff; color: #1e3a8a; border: 1px solid #3b82f6; border-radius: 6px; padding: 3px 12px; text-align: center; font-size: 13px; font-weight: bold; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .shape-oval { background-color: #dbeafe; color: #1e3a8a; border-radius: 50%; width: 120px; height: 55px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: bold; box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.2); padding: 4px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .header-left-table { display: inline-table; border-collapse: collapse; text-align: right; direction: inherit; }
+        .header-left-table td { padding: 0; white-space: nowrap; }
+        .mini-toolbar { display: inline-flex; align-items: center; gap: 2px; background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 1px 4px; }
+        .mini-btn { padding: 1px 4px; border-radius: 3px; font-size: 10px; cursor: pointer; transition: background 0.15s; }
+        .mini-btn:hover { background: #f3f4f6; }
+        .mini-btn.active { background: #4f46e5; color: #fff; }
+        .mini-color { width: 16px; height: 16px; padding: 0; border: 1px solid #9ca3af; border-radius: 3px; cursor: pointer; }
+        .mic-btn { background: #ef4444; color: white; border-radius: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 2px; }
+        .mic-btn:hover { background: #dc2626; }
+        .mic-btn.listening { background: #22c55e !important; animation: pulse-mic 1.5s infinite; }
+        @keyframes pulse-mic { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col lg:flex-row overflow-x-hidden">
+    <aside class="no-print w-full lg:w-5/12 xl:w-4/12 bg-white border-l border-gray-200 flex flex-col h-auto lg:h-screen shadow-lg z-10">
+        <div class="bg-indigo-800 text-white p-3 flex flex-wrap justify-between items-center gap-2 shadow">
+            <div><h1 class="text-sm lg:text-base font-bold flex items-center gap-1.5"><i class="fa-solid fa-file-pen text-yellow-300"></i>مصمم الأسئلة الامتحانية</h1></div>
+            <div class="flex flex-wrap items-center gap-1">
+                <button type="button" onclick="setEnglishPreset()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-2 py-1.5 rounded-lg text-xs flex items-center gap-1 transition" title="إنجليزي بريطاني (en-GB)"><i class="fa-solid fa-language"></i> إنجليزي (UK)</button>
+                <button type="button" onclick="setArabicPreset()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-2 py-1.5 rounded-lg text-xs flex items-center gap-1 transition"><i class="fa-solid fa-language"></i> عربي</button>
+                <button type="button" onclick="toggleColorMode()" id="colorToggleBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-2 py-1.5 rounded-lg text-xs flex items-center gap-1 transition"><i class="fa-solid fa-palette"></i><span id="colorBtnText">ألوان</span></button>
+            </div>
+        </div>
+        <div class="bg-indigo-950 text-white px-3 py-2.5 flex items-center justify-between gap-2 border-b border-indigo-700">
+            <span class="text-xs font-bold text-indigo-200 flex items-center gap-1"><i class="fa-solid fa-file-export text-yellow-300"></i>تصدير بصيغة A4:</span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="exportToWord()" class="bg-sky-500 hover:bg-sky-400 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition shadow"><i class="fa-solid fa-file-word"></i><span>ملف Word</span></button>
+                <button type="button" onclick="exportToPDF()" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition shadow"><i class="fa-solid fa-file-pdf"></i><span>ملف PDF / طباعة</span></button>
+            </div>
+        </div>
+        <div class="p-3.5 overflow-y-auto flex-1 custom-scrollbar space-y-4 max-h-[75vh] lg:max-h-none text-xs">
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 space-y-2">
+                <h2 class="font-bold text-amber-900 flex items-center gap-1.5 border-b border-amber-200 pb-1.5 text-xs"><i class="fa-solid fa-border-all text-amber-600"></i>إطارات وحدود الصفحة (تظهر بالطباعة بداخل الورقة)</h2>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">اختر شكل إطار الصفحة:</label>
+                    <select id="pageBorderSelect" onchange="updatePageBorder()" class="w-full p-2 border rounded focus:ring-2 focus:ring-amber-400 outline-none bg-white font-bold">
+                        <option value="page-border-pdf-exact" selected>إطار النموذج الأصلي (أسود بارز ومطابق للـ PDF)</option>
+                        <option value="page-border-simple">إطار بسيط (خط واحد رفيع)</option>
+                        <option value="page-border-double">إطار مزدوج (خطين متوازيين)</option>
+                        <option value="page-border-dashed">إطار متقطع (منقط)</option>
+                        <option value="page-border-ornate">إطار مزخرف (أشكال هندسية)</option>
+                        <option value="page-border-none">بلا حدود (بدون إطار)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-3">
+                <div class="border-b pb-1.5"><h2 class="font-bold text-gray-700 flex items-center gap-1.5 text-xs"><i class="fa-solid fa-heading text-indigo-600"></i>تعديل العناوين والتوقيع (مع الإملاء الصوتي 🎤)</h2></div>
+                <div id="headerFieldsContainer" class="space-y-2.5"></div>
+                <div>
+                    <label class="block font-semibold mb-0.5 text-gray-600">شكل إطار التمنيات:</label>
+                    <select id="signatureShape" onchange="updatePaper()" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-indigo-400 outline-none bg-white font-bold">
+                        <option value="heart" selected>نص عادي بدون إطار</option>
+                        <option value="rect">إطار مستطيل أنيق</option>
+                        <option value="oval">شكل بيضاوي ملوّن</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-bold text-gray-700 flex items-center gap-1.5 text-xs"><i class="fa-solid fa-list-check text-indigo-600"></i>الأسئلة والتمارين وإدراج الصور 🖼️</h2>
+                    <button type="button" onclick="addQuestion()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold px-2 py-1 rounded flex items-center gap-1 transition shadow"><i class="fa-solid fa-plus"></i> إضافة سؤال</button>
+                </div>
+                <div id="questionsEditorContainer" class="space-y-3"></div>
+            </div>
+        </div>
+        <div class="p-2.5 bg-gray-100 border-t border-gray-200 text-center text-[11px] text-gray-600">إعداد وتصميم: <span class="font-bold text-indigo-700">نور حسين ناجي</span></div>
+    </aside>
+    <main class="flex-1 bg-gray-300 overflow-y-auto p-2 sm:p-4 lg:p-8 flex justify-center items-start custom-scrollbar">
+        <div id="examPaper" class="a4-page exam-paper-font-ar text-black scale-[0.75] sm:scale-90 lg:scale-100 origin-top page-border-pdf-exact" dir="rtl">
+            <div class="paper-content-area">
+                <div id="paperHeaderDiv" class="flex justify-between items-start text-center pb-1.5 mb-2">
+                    <div id="headerSchoolDiv" class="w-1/3 text-right font-bold text-base"><span id="paperSchool" class="px-1">أعدادية المعرفة للبنات</span></div>
+                    <div id="headerCenterDiv" class="w-1/3 text-center font-bold">
+                        <div><span id="paperExamType" class="text-lg leading-tight px-1">أسئلة امتحان نصف السنة</span></div>
+                        <div id="paperYearContainer" class="text-sm mt-1"><span id="paperYearLabel" class="px-0.5">للعام الدراسي</span><span id="paperYear" class="px-0.5">2025-2026</span></div>
+                    </div>
+                    <div id="headerMetaDiv" class="w-1/3 flex justify-end font-bold text-base">
+                        <table class="header-left-table">
+                            <tr id="rowGrade"><td><span id="paperGradeLabel" class="px-0.5">الصف :</span>&nbsp;</td><td><span id="paperGrade" class="px-0.5">الخامس الأعدادي</span></td></tr>
+                            <tr id="rowSubject"><td><span id="paperSubjectLabel" class="px-0.5">المادة :</span>&nbsp;</td><td><span id="paperSubject" class="px-0.5">حاسوب</span></td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div id="paperNoteContainer" class="text-center my-2.5"><span id="paperNote" class="highlight-cyan inline-block text-base tracking-wide border border-black">ملاحظة : الإجابة عن أربعة أسئلة فقط لكل سؤال 15 درجة</span></div>
+                <div id="paperQuestionsContainer" class="text-base"></div>
+            </div>
+            <div id="paperFooterDiv" class="signature-container">
+                <div class="w-1/4"></div>
+                <div class="w-2/4 flex justify-center"><div id="signatureBadge" class="shape-heart"><span id="paperTeacherFooter" class="px-1">دعائي لكم بالتوفيق والسداد</span></div></div>
+                <div id="footerTeacherDiv" class="w-1/4 text-left font-bold text-sm text-gray-900 leading-tight"><div><span id="paperFooterLabel" class="px-1">مدرسة المادة</span></div><div class="mt-0.5"><span id="paperFooterName" class="px-1">نور حسين ناجي</span></div></div>
+            </div>
+        </div>
+    </main>
+    <script>
+        var isColor = true; var currentLang = 'ar-IQ';
+        var headerFields = {
+            School: { label: "اسم المدرسة / الجهة:", text: "أعدادية المعرفة للبنات", size: "16px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            ExamType: { label: "عنوان الامتحان الرئيسي:", text: "أسئلة امتحان نصف السنة", size: "18px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            YearLabel: { label: "تسمية السطر الثاني:", text: "للعام الدراسي", size: "14px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            Year: { label: "قيمة السطر الثاني:", text: "2025-2026", size: "14px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            GradeLabel: { label: "تسمية الصف:", text: "الصف :", size: "16px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            Grade: { label: "قيمة الصف:", text: "الخامس الأعدادي", size: "16px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            SubjectLabel: { label: "تسمية المادة:", text: "المادة :", size: "16px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            Subject: { label: "قيمة المادة:", text: "حاسوب", size: "16px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            Note: { label: "نص الملاحظة الرئيسية:", text: "ملاحظة : الإجابة عن أربعة أسئلة فقط لكل سؤال 15 درجة", size: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#00ffff" },
+            Teacher: { label: "عبارة التمنيات (المنتصف):", text: "دعائي لكم بالتوفيق والسداد", size: "13px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            FooterLabel: { label: "السطر الأول (يسار التوقيع):", text: "مدرسة المادة", size: "14px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+            FooterName: { label: "السطر الثاني (اسم المدرسة تحته):", text: "نور حسين ناجي", size: "14px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }
+        };
+        var questions = [
+            { id: 1, title: "س 1/ أ| ما هو الـ IOT ؟ وما هي الحلول التي يقدمها ؟ عدديها فقط.", score: "(8 د)", fontSize: "17px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#ffff00", note: "", noteBold: true, noteItalic: false, noteUnderline: false, noteColor: "#000000", noteBgColor: "transparent", imgUrl: "", imgWidth: "150", imgHeight: "auto", imgAlign: "center", imgPos: "afterNote", subItems: [{ text: "س 1/ ب| أي من أنظمة التشغيل يسمح للمطورين بالتعديل على تطبيقاته؟ وبماذا يوصف؟", score: "(7 د)", fontSize: "15.5px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }] },
+            { id: 2, title: "س 2/ اجيبي عن الأسئلة التالية : ( اجيبي عن خمس فقط)", score: "(15 د)", fontSize: "17px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#ffff00", note: "", noteBold: true, noteItalic: false, noteUnderline: false, noteColor: "#000000", noteBgColor: "transparent", imgUrl: "", imgWidth: "150", imgHeight: "auto", imgAlign: "center", imgPos: "afterNote", subItems: [
+                { text: "1- تنسيق يستعمل لتمييز البيانات الموجودة حالياً بألوان وأشرطة محددة ما هو ؟", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "2- من أمثلة تطبيقات التواصل الاجتماعي هي؟ (اذكري تطبيق)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "3- يعد الجهاز الإلكتروني ذكياً إذا توافرت فيه خصائص - مثل ؟ (اذكري واحدة فقط)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "4- نظام تشغيل مدعوم بسحابة مجانية لحفظ البيانات (i cloud) تسمح بخزن البيانات فما هو ؟", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "5- ما هي التطبيقات التي تصمم لتعمل مع نوع محدد من أنظمة التشغيل للأجهزة الذكية ؟", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "6- ملف نصي غير قابل للتعديل ما هو ؟", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }
+            ] },
+            { id: 3, title: "س 3/ أ| قارني بين الحاسوب والهاتف الذكي من حيث : البطارية.", score: "(5 د)", fontSize: "17px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#ffff00", note: "", noteBold: true, noteItalic: false, noteUnderline: false, noteColor: "#000000", noteBgColor: "transparent", imgUrl: "", imgWidth: "150", imgHeight: "auto", imgAlign: "center", imgPos: "afterNote", subItems: [{ text: "س 3/ ب| عددي خمس فقط من مكونات واجهة برنامج الأكسل", score: "(10 د)", fontSize: "15.5px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }] },
+            { id: 4, title: "س 4\\1\\ ما وظيفة كل من الأوامر الآتية : (اجيبي عن خمس)", score: "(10 د)", fontSize: "17px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#ffff00", note: "picture , Format painter , Insert Sheet , copy , Open , Print", noteBold: true, noteItalic: false, noteUnderline: false, noteColor: "#000000", noteBgColor: "transparent", imgUrl: "", imgWidth: "150", imgHeight: "auto", imgAlign: "center", imgPos: "afterNote", subItems: [{ text: "س 4\\2\\ اكتبي الصيغة العامة لدالة الجمع في برنامج الإكسل مع كتابة مثال.", score: "(5 د)", fontSize: "15.5px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }] },
+            { id: 5, title: "س 5/ اختاري الإجابة الصحيحة من بين الأقواس (5 فقط) :", score: "(15 د)", fontSize: "17px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#ffff00", note: "", noteBold: true, noteItalic: false, noteUnderline: false, noteColor: "#000000", noteBgColor: "transparent", imgUrl: "", imgWidth: "150", imgHeight: "auto", imgAlign: "center", imgPos: "afterNote", subItems: [
+                { text: "1- التطبيقات التي تسمح بمحاكاة التجارب العلمية بواقعية احترافية هي .... (تطبيقات طبية - تطبيقات علمية - تطبيقات التواصل الاجتماعي)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "2- ..... عبارة عن أشكال رسومية جاهزة قابلة للتعديل (shape - chart - smart art)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "3- لإغلاق برنامج الإكسل من لوحة المفاتيح نضغط على الأمرين معاً .... (Alt+F1 - Alt+F2 - Alt+F4)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "4- ..... تستعمل هذه الدالة لإيجاد أصغر قيمة في ضمن مجموعة خلايا (COUNT - MIN - MAX)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "5- إن كل عملية حسابية في برنامج الإكسل يجب أن تبدأ بإشارة .... ( = - - - + )", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
+                { text: "6- ليتم إدراج صورة إلى ورقة العمل نذهب أولاً إلى تبويب ..... (Home - Insert - Page layout)", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }
+            ] }
+        ];
+        function startVoiceInput(onResultCallback) {
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("عذراً، متصفحك لا يدعم خاصية الإملاء الصوتي المباشر."); return; }
+            var recognition = new SpeechRecognition(); recognition.lang = currentLang; recognition.interimResults = false; recognition.maxAlternatives = 1;
+            recognition.onresult = function(event) { onResultCallback(event.results[0][0].transcript); }; recognition.start();
+        }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+        function renderHeaderEditor() {
+            var container = document.getElementById('headerFieldsContainer'); if (!container) return; container.innerHTML = '';
+            Object.keys(headerFields).forEach(function(key) {
+                var f = headerFields[key]; var bgPickerVal = (f.bgColor && f.bgColor !== 'transparent') ? f.bgColor : '#ffff00';
+                var box = document.createElement('div'); box.className = 'bg-white p-2 rounded border border-gray-200 space-y-1';
+                box.innerHTML = `<div class="flex flex-wrap justify-between items-center gap-1"><label class="font-bold text-[11px] text-gray-700">${f.label}</label><div class="flex items-center gap-1"><button type="button" id="mic_h_${key}" onclick="recordHeader('${key}')" class="mic-btn" title="تحدث للإملاء الصوتي"><i class="fa-solid fa-microphone"></i> صوت</button><div class="mini-toolbar"><button type="button" onclick="toggleHeaderStyle('${key}', 'bold')" class="mini-btn font-bold ${f.bold ? 'active' : ''}" title="تثخين">B</button><button type="button" onclick="toggleHeaderStyle('${key}', 'italic')" class="mini-btn italic ${f.italic ? 'active' : ''}" title="مائل">I</button><button type="button" onclick="toggleHeaderStyle('${key}', 'underline')" class="mini-btn underline ${f.underline ? 'active' : ''}" title="تحت خط">U</button><span class="text-gray-300">|</span><input type="color" value="${f.color}" oninput="setHeaderColor('${key}', 'color', this.value)" class="mini-color" title="لون الخط"><input type="color" value="${bgPickerVal}" oninput="setHeaderColor('${key}', 'bgColor', this.value)" class="mini-color" title="لون الخلفية"><button type="button" onclick="clearHeaderBg('${key}')" class="mini-btn text-red-600" title="إزالة الخلفية"><i class="fa-solid fa-eraser"></i></button></div></div></div><div class="flex gap-1.5"><input type="text" id="input_h_${key}" value="${escapeHtml(f.text)}" oninput="updateHeaderText('${key}', this.value)" class="flex-1 p-1.5 border rounded focus:ring-2 focus:ring-indigo-400 outline-none text-xs"><select onchange="updateHeaderSize('${key}', this.value)" class="w-16 p-1 border rounded bg-gray-50 text-center font-bold text-xs"><option value="11px" ${f.size === '11px' ? 'selected' : ''}>11</option><option value="12px" ${f.size === '12px' ? 'selected' : ''}>12</option><option value="13px" ${f.size === '13px' ? 'selected' : ''}>13</option><option value="14px" ${f.size === '14px' ? 'selected' : ''}>14</option><option value="15px" ${f.size === '15px' ? 'selected' : ''}>15</option><option value="16px" ${f.size === '16px' ? 'selected' : ''}>16</option><option value="18px" ${f.size === '18px' ? 'selected' : ''}>18</option><option value="20px" ${f.size === '20px' ? 'selected' : ''}>20</option><option value="22px" ${f.size === '22px' ? 'selected' : ''}>22</option></select></div>`;
+                container.appendChild(box);
+            });
+        }
+        function recordHeader(key) { var btn = document.getElementById('mic_h_' + key); btn.classList.add('listening'); startVoiceInput(function(text) { headerFields[key].text = text; renderHeaderEditor(); updatePaper(); btn.classList.remove('listening'); }); }
+        function toggleHeaderStyle(key, prop) { headerFields[key][prop] = !headerFields[key][prop]; renderHeaderEditor(); updatePaper(); }
+        function setHeaderColor(key, prop, val) { headerFields[key][prop] = val; updatePaper(); }
+        function clearHeaderBg(key) { headerFields[key].bgColor = 'transparent'; renderHeaderEditor(); updatePaper(); }
+        function updateHeaderText(key, val) { headerFields[key].text = val; updatePaper(); }
+        function updateHeaderSize(key, val) { headerFields[key].size = val; updatePaper(); }
+        function applyFieldStyleToDOM(domId, key) {
+            var el = document.getElementById(domId); var f = headerFields[key]; if (!el || !f) return;
+            el.innerText = f.text; el.style.fontSize = f.size; el.style.fontWeight = f.bold ? 'bold' : 'normal';
+            el.style.fontStyle = f.italic ? 'italic' : 'normal'; el.style.textDecoration = f.underline ? 'underline' : 'none';
+            el.style.color = isColor ? f.color : '#000000'; el.style.backgroundColor = isColor ? f.bgColor : 'transparent';
+        }
+        function updatePaper() {
+            Object.keys(headerFields).forEach(function(key) { applyFieldStyleToDOM('paper' + key, key); });
+            document.getElementById('headerSchoolDiv').style.display = headerFields.School.text.trim() === "" ? "none" : "block";
+            var centerEmpty = headerFields.ExamType.text.trim() === "" && headerFields.YearLabel.text.trim() === "" && headerFields.Year.text.trim() === "";
+            document.getElementById('headerCenterDiv').style.display = centerEmpty ? "none" : "block";
+            document.getElementById('rowGrade').style.display = (headerFields.GradeLabel.text.trim() === "" && headerFields.Grade.text.trim() === "") ? "none" : "table-row";
+            document.getElementById('rowSubject').style.display = (headerFields.SubjectLabel.text.trim() === "" && headerFields.Subject.text.trim() === "") ? "none" : "table-row";
+            var metaEmpty = headerFields.GradeLabel.text.trim() === "" && headerFields.Grade.text.trim() === "" && headerFields.SubjectLabel.text.trim() === "" && headerFields.Subject.text.trim() === "";
+            document.getElementById('headerMetaDiv').style.display = metaEmpty ? "none" : "flex";
+            document.getElementById('paperNoteContainer').style.display = headerFields.Note.text.trim() === "" ? "none" : "block";
+            var elemTeacherFooter = document.getElementById('paperTeacherFooter');
+            elemTeacherFooter.innerHTML = escapeHtml(headerFields.Teacher.text).replace(/\n/g, '<br>');
+            var footerEmpty = headerFields.Teacher.text.trim() === "" && headerFields.FooterLabel.text.trim() === "" && headerFields.FooterName.text.trim() === "";
+            document.getElementById('paperFooterDiv').style.display = footerEmpty ? "none" : "flex";
+            var shape = document.getElementById('signatureShape').value; var badge = document.getElementById('signatureBadge');
+            if(badge) badge.className = shape === 'oval' ? 'shape-oval' : (shape === 'rect' ? 'shape-rect' : 'shape-heart');
+        }
+        function setEnglishPreset() {
+            currentLang = 'en-GB'; var paper = document.getElementById('examPaper'); paper.setAttribute('dir', 'ltr');
+            paper.className = "a4-page exam-paper-font-en text-black scale-[0.75] sm:scale-90 lg:scale-100 origin-top " + document.getElementById('pageBorderSelect').value;
+            document.getElementById('headerSchoolDiv').className = "w-1/3 text-left font-bold text-base";
+            document.getElementById('headerMetaDiv').className = "w-1/3 flex justify-start font-bold text-base";
+            document.getElementById('footerTeacherDiv').className = "w-1/4 text-right font-bold text-sm text-gray-900 leading-tight";
+            headerFields.School.text = "Al-Ma'rifa Prep. School for Girls"; headerFields.FooterLabel.text = "Teacher"; headerFields.FooterName.text = "Noor Hussain Naji";
+            headerFields.ExamType.text = "Daily / Monthly Examination"; headerFields.YearLabel.text = "Month:"; headerFields.Year.text = "October";
+            headerFields.GradeLabel.text = "Grade:"; headerFields.Grade.text = "Fifth Preparatory"; headerFields.SubjectLabel.text = "Subject:";
+            headerFields.Subject.text = "English Language"; headerFields.Note.text = "Note: Answer all questions."; headerFields.Teacher.text = "Best of Luck";
+            renderHeaderEditor(); updatePaper(); renderEditor(); renderPaperQuestions();
+        }
+        function setArabicPreset() {
+            currentLang = 'ar-IQ'; var paper = document.getElementById('examPaper'); paper.setAttribute('dir', 'rtl');
+            paper.className = "a4-page exam-paper-font-ar text-black scale-[0.75] sm:scale-90 lg:scale-100 origin-top " + document.getElementById('pageBorderSelect').value;
+            document.getElementById('headerSchoolDiv').className = "w-1/3 text-right font-bold text-base";
+            document.getElementById('headerMetaDiv').className = "w-1/3 flex justify-end font-bold text-base";
+            document.getElementById('footerTeacherDiv').className = "w-1/4 text-left font-bold text-sm text-gray-900 leading-tight";
+            headerFields.School.text = "أعدادية المعرفة للبنات"; headerFields.FooterLabel.text = "مدرسة المادة"; headerFields.FooterName.text = "نور حسين ناجي";
+            headerFields.ExamType.text = "أسئلة امتحان نصف السنة"; headerFields.YearLabel.text = "للعام الدراسي"; headerFields.Year.text = "2025-2026";
+            headerFields.GradeLabel.text = "الصف :"; headerFields.Grade.text = "الخامس الأعدادي"; headerFields.SubjectLabel.text = "المادة :";
+            headerFields.Subject.text = "حاسوب"; headerFields.Note.text = "ملاحظة : الإجابة عن أربعة أسئلة فقط لكل سؤال 15 درجة"; headerFields.Teacher.text = "دعائي لكم بالتوفيق والسداد";
+            renderHeaderEditor(); updatePaper(); renderEditor(); renderPaperQuestions();
+        }
+        function updatePageBorder() {
+            var paper = document.getElementById('examPaper'); var selectedBorder = document.getElementById('pageBorderSelect').value;
+            paper.classList.remove('page-border-none', 'page-border-pdf-exact', 'page-border-simple', 'page-border-double', 'page-border-dashed', 'page-border-ornate');
+            paper.classList.add(selectedBorder);
+        }
+        function toggleColorMode() {
+            isColor = !isColor; var paper = document.getElementById('examPaper'); var btnText = document.getElementById('colorBtnText');
+            if(isColor) { paper.classList.remove('bw-mode'); btnText.innerText = 'ألوان'; }
+            else { paper.classList.add('bw-mode'); btnText.innerText = 'أسود وأبيض'; }
+            updatePaper(); renderPaperQuestions();
+        }
+        function renderEditor() {
+            var container = document.getElementById('questionsEditorContainer'); if (!container) return; container.innerHTML = '';
+            questions.forEach(function(q, index) {
+                var qBox = document.createElement('div'); qBox.className = 'bg-gray-50 border border-gray-300 p-2.5 rounded-lg space-y-2 relative';
+                var qBgPicker = (q.bgColor && q.bgColor !== 'transparent') ? q.bgColor : '#ffff00';
+                var noteBgPicker = (q.noteBgColor && q.noteBgColor !== 'transparent') ? q.noteBgColor : '#ffff00';
+                var subItemsHTML = '';
+                if (q.subItems) {
+                    q.subItems.forEach(function(sub, subIdx) {
+                        var subFont = sub.fontSize || '15px'; var subBgPicker = (sub.bgColor && sub.bgColor !== 'transparent') ? sub.bgColor : '#ffff00';
+                        subItemsHTML += `<div class="bg-white p-1.5 rounded border border-gray-200 mt-1 space-y-1"><div class="flex justify-between items-center"><span class="text-[10px] font-bold text-gray-500">فرع ${subIdx + 1}:</span><div class="flex items-center gap-1"><button type="button" id="mic_sub_${q.id}_${subIdx}" onclick="recordSub(${q.id}, ${subIdx})" class="mic-btn" title="تحدث للإملاء الصوتي"><i class="fa-solid fa-microphone"></i> صوت</button><div class="mini-toolbar"><button type="button" onclick="toggleSubStyle(${q.id}, ${subIdx}, 'bold')" class="mini-btn font-bold ${sub.bold ? 'active' : ''}" title="تثخين">B</button><button type="button" onclick="toggleSubStyle(${q.id}, ${subIdx}, 'italic')" class="mini-btn italic ${sub.italic ? 'active' : ''}" title="مائل">I</button><button type="button" onclick="toggleSubStyle(${q.id}, ${subIdx}, 'underline')" class="mini-btn underline ${sub.underline ? 'active' : ''}" title="تحت خط">U</button><span class="text-gray-300">|</span><input type="color" value="${sub.color || '#000000'}" oninput="setSubProp(${q.id}, ${subIdx}, 'color', this.value)" class="mini-color" title="لون الخط"><input type="color" value="${subBgPicker}" oninput="setSubProp(${q.id}, ${subIdx}, 'bgColor', this.value)" class="mini-color" title="لون الخلفية"><button type="button" onclick="setSubProp(${q.id}, ${subIdx}, 'bgColor', 'transparent')" class="mini-btn text-red-600" title="إزالة الخلفية"><i class="fa-solid fa-eraser"></i></button></div><button type="button" onclick="deleteSubItem(${q.id}, ${subIdx})" class="text-red-500 hover:text-red-700 p-0.5 text-xs" title="حذف الفرع"><i class="fa-solid fa-xmark"></i></button></div></div><div class="flex items-center gap-1"><input type="text" value="${escapeHtml(sub.text)}" oninput="setSubProp(${q.id}, ${subIdx}, 'text', this.value)" placeholder="نص الفرع..." class="flex-1 p-1 text-xs border rounded bg-white focus:ring-1 focus:ring-indigo-400 outline-none"><input type="text" value="${escapeHtml(sub.score || '')}" oninput="setSubProp(${q.id}, ${subIdx}, 'score', this.value)" placeholder="الدرجة" class="w-12 p-1 text-xs border rounded bg-white text-center focus:ring-1 focus:ring-indigo-400 outline-none"><select onchange="setSubProp(${q.id}, ${subIdx}, 'fontSize', this.value)" class="w-14 p-1 text-xs border rounded bg-white text-center font-bold"><option value="12px" ${subFont === '12px' ? 'selected' : ''}>12</option><option value="13px" ${subFont === '13px' ? 'selected' : ''}>13</option><option value="14px" ${subFont === '14px' ? 'selected' : ''}>14</option><option value="15px" ${subFont === '15px' ? 'selected' : ''}>15</option><option value="15.5px" ${subFont === '15.5px' ? 'selected' : ''}>15.5</option><option value="16px" ${subFont === '16px' ? 'selected' : ''}>16</option><option value="18px" ${subFont === '18px' ? 'selected' : ''}>18</option><option value="20px" ${subFont === '20px' ? 'selected' : ''}>20</option></select></div></div>`;
+                    });
+                }
+                var qFont = q.fontSize || '17px';
+                qBox.innerHTML = `<div class="flex justify-between items-center border-b pb-1.5"><span class="font-bold text-xs text-indigo-700">السؤال ${index + 1}</span><div class="flex items-center gap-1"><button type="button" onclick="moveQuestion(${index}, -1)" ${index === 0 ? 'disabled class="opacity-30"' : ''} class="text-gray-600 hover:text-indigo-600 p-1 text-xs"><i class="fa-solid fa-arrow-up"></i></button><button type="button" onclick="moveQuestion(${index}, 1)" ${index === questions.length - 1 ? 'disabled class="opacity-30"' : ''} class="text-gray-600 hover:text-indigo-600 p-1 text-xs"><i class="fa-solid fa-arrow-down"></i></button><button type="button" onclick="deleteQuestion(${q.id})" class="text-red-500 hover:text-red-700 p-1 text-xs mr-1"><i class="fa-solid fa-trash"></i></button></div></div><div class="bg-white p-1.5 rounded border border-gray-200 space-y-1"><div class="flex justify-between items-center"><label class="block text-[10px] font-bold text-gray-600">عنوان السؤال:</label><div class="flex items-center gap-1"><button type="button" id="mic_q_${q.id}" onclick="recordQuestion(${q.id})" class="mic-btn" title="تحدث للإملاء الصوتي"><i class="fa-solid fa-microphone"></i> صوت</button><div class="mini-toolbar"><button type="button" onclick="toggleQuestionStyle(${q.id}, 'bold')" class="mini-btn font-bold ${q.bold ? 'active' : ''}" title="تثخين">B</button><button type="button" onclick="toggleQuestionStyle(${q.id}, 'italic')" class="mini-btn italic ${q.italic ? 'active' : ''}" title="مائل">I</button><button type="button" onclick="toggleQuestionStyle(${q.id}, 'underline')" class="mini-btn underline ${q.underline ? 'active' : ''}" title="تحت خط">U</button><span class="text-gray-300">|</span><input type="color" value="${q.color || '#000000'}" oninput="setQuestionProp(${q.id}, 'color', this.value)" class="mini-color" title="لون الخط"><input type="color" value="${qBgPicker}" oninput="setQuestionProp(${q.id}, 'bgColor', this.value)" class="mini-color" title="لون الخلفية"><button type="button" onclick="setQuestionProp(${q.id}, 'bgColor', 'transparent')" class="mini-btn text-red-600" title="إزالة الخلفية"><i class="fa-solid fa-eraser"></i></button></div></div></div><div class="grid grid-cols-6 gap-1"><input type="text" value="${escapeHtml(q.title)}" oninput="setQuestionProp(${q.id}, 'title', this.value)" class="col-span-4 p-1 text-xs font-bold border rounded bg-white focus:ring-1 focus:ring-indigo-400 outline-none"><input type="text" value="${escapeHtml(q.score || '')}" oninput="setQuestionProp(${q.id}, 'score', this.value)" placeholder="الدرجة" class="col-span-1 p-1 text-xs border rounded bg-white text-center focus:ring-1 focus:ring-indigo-400 outline-none"><select onchange="setQuestionProp(${q.id}, 'fontSize', this.value)" class="col-span-1 p-1 text-xs border rounded bg-white text-center font-bold"><option value="14px" ${qFont === '14px' ? 'selected' : ''}>14</option><option value="15px" ${qFont === '15px' ? 'selected' : ''}>15</option><option value="16px" ${qFont === '16px' ? 'selected' : ''}>16</option><option value="17px" ${qFont === '17px' ? 'selected' : ''}>17</option><option value="18px" ${qFont === '18px' ? 'selected' : ''}>18</option><option value="20px" ${qFont === '20px' ? 'selected' : ''}>20</option><option value="22px" ${qFont === '22px' ? 'selected' : ''}>22</option><option value="24px" ${qFont === '24px' ? 'selected' : ''}>24</option></select></div></div><div class="bg-white p-1.5 rounded border border-gray-200 space-y-1"><div class="flex justify-between items-center"><label class="block text-[10px] font-bold text-gray-600">توضيح إضافي أو خيارات:</label><div class="flex items-center gap-1"><button type="button" id="mic_note_${q.id}" onclick="recordNote(${q.id})" class="mic-btn" title="تحدث للإملاء الصوتي"><i class="fa-solid fa-microphone"></i> صوت</button><div class="mini-toolbar"><button type="button" onclick="toggleQuestionStyle(${q.id}, 'noteBold')" class="mini-btn font-bold ${q.noteBold ? 'active' : ''}" title="تثخين">B</button><button type="button" onclick="toggleQuestionStyle(${q.id}, 'noteItalic')" class="mini-btn italic ${q.noteItalic ? 'active' : ''}" title="مائل">I</button><button type="button" onclick="toggleQuestionStyle(${q.id}, 'noteUnderline')" class="mini-btn underline ${q.noteUnderline ? 'active' : ''}" title="تحت خط">U</button><span class="text-gray-300">|</span><input type="color" value="${q.noteColor || '#000000'}" oninput="setQuestionProp(${q.id}, 'noteColor', this.value)" class="mini-color" title="لون الخط"><input type="color" value="${noteBgPicker}" oninput="setQuestionProp(${q.id}, 'noteBgColor', this.value)" class="mini-color" title="لون الخلفية"><button type="button" onclick="setQuestionProp(${q.id}, 'noteBgColor', 'transparent')" class="mini-btn text-red-600" title="إزالة الخلفية"><i class="fa-solid fa-eraser"></i></button></div></div></div><input type="text" value="${escapeHtml(q.note || '')}" oninput="setQuestionProp(${q.id}, 'note', this.value)" class="w-full p-1 text-xs border rounded bg-white focus:ring-1 focus:ring-indigo-400 outline-none"></div><div class="bg-blue-50/50 p-2 rounded border border-blue-200 space-y-1.5"><label class="block text-[10px] font-bold text-blue-900 flex items-center gap-1"><i class="fa-solid fa-image text-blue-600"></i> إدراج صورة توضيحية لهذا السؤال:</label><div class="flex items-center gap-1.5"><input type="file" accept="image/*" onchange="handleImageUpload(event, ${q.id})" class="text-[10px] w-full bg-white border rounded p-1">${q.imgUrl ? `<button type="button" onclick="removeImage(${q.id})" class="text-red-600 hover:text-red-800 text-xs px-1.5 py-0.5 bg-white border rounded" title="حذف الصورة"><i class="fa-solid fa-trash"></i></button>` : ''}</div>${q.imgUrl ? `<div class="grid grid-cols-3 gap-1 pt-1"><div><label class="text-[9px] text-gray-600 block">العرض (px):</label><input type="number" value="${q.imgWidth || 150}" oninput="setQuestionProp(${q.id}, 'imgWidth', this.value)" class="w-full p-1 text-xs border rounded bg-white text-center"></div><div><label class="text-[9px] text-gray-600 block">المحاذاة الأفقية:</label><select onchange="setQuestionProp(${q.id}, 'imgAlign', this.value)" class="w-full p-1 text-xs border rounded bg-white text-center font-bold"><option value="right" ${q.imgAlign === 'right' ? 'selected' : ''}>يمين</option><option value="center" ${q.imgAlign === 'center' ? 'selected' : ''}>منتصف</option><option value="left" ${q.imgAlign === 'left' ? 'selected' : ''}>يسار</option></select></div><div><label class="text-[9px] text-gray-600 block">مكان الصورة:</label><select onchange="setQuestionProp(${q.id}, 'imgPos', this.value)" class="w-full p-1 text-xs border rounded bg-white text-center font-bold"><option value="beforeNote" ${q.imgPos === 'beforeNote' ? 'selected' : ''}>فوق الملاحظة</option><option value="afterNote" ${q.imgPos === 'afterNote' ? 'selected' : ''}>بعد الملاحظة</option><option value="afterSub" ${q.imgPos === 'afterSub' ? 'selected' : ''}>أسفل السؤال (بعد الفروع)</option></select></div></div>` : ''}</div><div class="pt-0.5"><div class="flex justify-between items-center"><label class="block text-[10px] font-bold text-gray-600">فروع السؤال:</label><button type="button" onclick="addSubItem(${q.id})" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-0.5"><i class="fa-solid fa-plus text-[9px]"></i> إضافة فرع</button></div><div class="space-y-1">${subItemsHTML}</div></div>`;
+                container.appendChild(qBox);
+            });
+        }
+        function handleImageUpload(event, id) { var file = event.target.files[0]; if (file) { var reader = new FileReader(); reader.onload = function(e) { var q = questions.find(function(item) { return item.id === id; }); if (q) { q.imgUrl = e.target.result; renderEditor(); renderPaperQuestions(); } }; reader.readAsDataURL(file); } }
+        function removeImage(id) { var q = questions.find(function(item) { return item.id === id; }); if (q) { q.imgUrl = ""; renderEditor(); renderPaperQuestions(); } }
+        function recordQuestion(id) { var btn = document.getElementById('mic_q_' + id); btn.classList.add('listening'); startVoiceInput(function(text) { var q = questions.find(function(item) { return item.id === id; }); if (q) { q.title = text; renderEditor(); renderPaperQuestions(); } btn.classList.remove('listening'); }); }
+        function recordNote(id) { var btn = document.getElementById('mic_note_' + id); btn.classList.add('listening'); startVoiceInput(function(text) { var q = questions.find(function(item) { return item.id === id; }); if (q) { q.note = text; renderEditor(); renderPaperQuestions(); } btn.classList.remove('listening'); }); }
+        function recordSub(qId, subIdx) { var btn = document.getElementById('mic_sub_' + qId + '_' + subIdx); btn.classList.add('listening'); startVoiceInput(function(text) { var q = questions.find(function(item) { return item.id === qId; }); if (q && q.subItems[subIdx]) { q.subItems[subIdx].text = text; renderEditor(); renderPaperQuestions(); } btn.classList.remove('listening'); }); }
+        function toggleQuestionStyle(id, prop) { var q = questions.find(function(item) { return item.id === id; }); if (q) { q[prop] = !q[prop]; renderEditor(); renderPaperQuestions(); } }
+        function setQuestionProp(id, prop, val) { var q = questions.find(function(item) { return item.id === id; }); if (q) { q[prop] = val; renderPaperQuestions(); } }
+        function toggleSubStyle(qId, subIdx, prop) { var q = questions.find(function(item) { return item.id === qId; }); if (q && q.subItems[subIdx]) { q.subItems[subIdx][prop] = !q.subItems[subIdx][prop]; renderEditor(); renderPaperQuestions(); } }
+        function setSubProp(qId, subIdx, prop, val) { var q = questions.find(function(item) { return item.id === qId; }); if (q && q.subItems[subIdx]) { q.subItems[subIdx][prop] = val; renderPaperQuestions(); } }
+        function renderPaperQuestions() {
+            var paperContainer = document.getElementById('paperQuestionsContainer'); if (!paperContainer) return; paperContainer.innerHTML = '';
+            questions.forEach(function(q) {
+                var qDiv = document.createElement('div'); qDiv.className = 'question-block';
+                var qSize = q.fontSize || '17px';
+                var qStyle = `font-weight:${q.bold ? 'bold' : 'normal'}; font-style:${q.italic ? 'italic' : 'normal'}; text-decoration:${q.underline ? 'underline' : 'none'}; color:${isColor ? (q.color || '#000000') : '#000000'}; background-color:${isColor ? (q.bgColor || 'transparent') : 'transparent'}; padding: 1px 4px;`;
+                var noteHTML = '';
+                if (q.note) {
+                    var nStyle = `font-weight:${q.noteBold ? 'bold' : 'normal'}; font-style:${q.noteItalic ? 'italic' : 'normal'}; text-decoration:${q.noteUnderline ? 'underline' : 'none'}; color:${isColor ? (q.noteColor || '#000000') : '#000000'}; background-color:${isColor ? (q.noteBgColor || 'transparent') : 'transparent'}; padding: 1px 6px;`;
+                    noteHTML = `<div class="text-center my-1.5 text-sm"><span style="${nStyle}">${escapeHtml(q.note)}</span></div>`;
+                }
+                var imgHTML = '';
+                if (q.imgUrl) {
+                    var alignCss = q.imgAlign === 'right' ? 'text-align: right;' : (q.imgAlign === 'left' ? 'text-align: left;' : 'text-align: center;');
+                    imgHTML = `<div style="margin: 6px 0; ${alignCss}"><img src="${q.imgUrl}" style="width: ${q.imgWidth || 150}px; height: auto; display: inline-block; max-width: 100%;" /></div>`;
+                }
+                var subListHTML = '';
+                if (q.subItems && q.subItems.length > 0) {
+                    subListHTML = '<div class="subitems-list">';
+                    q.subItems.forEach(function(item) {
+                        var subSize = item.fontSize || '15px';
+                        var sStyle = `font-weight:${item.bold ? 'bold' : 'normal'}; font-style:${item.italic ? 'italic' : 'normal'}; text-decoration:${item.underline ? 'underline' : 'none'}; color:${isColor ? (item.color || '#000000') : '#000000'}; background-color:${isColor ? (item.bgColor || 'transparent') : 'transparent'}; padding: 1px 4px;`;
+                        subListHTML += `<div class="subitem-row flex justify-between items-baseline" style="font-size: ${subSize};"><span class="flex-1"><span style="${sStyle}">${escapeHtml(item.text)}</span></span>${item.score ? `<span class="font-bold mx-2 text-sm">${escapeHtml(item.score)}</span>` : ''}</div>`;
+                    });
+                    subListHTML += '</div>';
+                }
+                var pos = q.imgPos || 'afterNote';
+                qDiv.innerHTML = `<div class="flex justify-between items-baseline" style="font-size: ${qSize};"><span style="${qStyle}">${escapeHtml(q.title)}</span>${q.score ? `<span class="font-bold mx-2 text-sm">${escapeHtml(q.score)}</span>` : ''}</div>${pos === 'beforeNote' ? imgHTML : ''}${noteHTML}${pos === 'afterNote' ? imgHTML : ''}${subListHTML}${pos === 'afterSub' ? imgHTML : ''}`;
+                paperContainer.appendChild(qDiv);
+            });
+        }
+        function addSubItem(qId) { var q = questions.find(function(item) { return item.id === qId; }); if (q) { q.subItems.push({ text: "فرع جديد : __________________", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }); renderEditor(); renderPaperQuestions(); } }
+        function deleteSubItem(qId, subIdx) { var q = questions.find(function(item) { return item.id === qId; }); if (q) { q.subItems.splice(subIdx, 1); renderEditor(); renderPaperQuestions(); } }
+        function addQuestion() {
+            var newId = Date.now();
+            questions.push({ id: newId, title: `س ${questions.length + 1}/ اكتب عنوان السؤال الجديد هنا :`, score: "(15 د)", fontSize: "17px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "#ffff00", note: "", noteBold: true, noteItalic: false, noteUnderline: false, noteColor: "#000000", noteBgColor: "transparent", imgUrl: "", imgWidth: "150", imgHeight: "auto", imgAlign: "center", imgPos: "afterNote", subItems: [{ text: "1- الفرع الأول : __________________", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }, { text: "2- الفرع الثاني : __________________", score: "", fontSize: "15px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" }] });
+            renderEditor(); renderPaperQuestions();
+        }
+        function deleteQuestion(id) { questions = questions.filter(function(item) { return item.id !== id; }); renderEditor(); renderPaperQuestions(); }
+        function moveQuestion(index, direction) { var targetIndex = index + direction; if (targetIndex >= 0 && targetIndex < questions.length) { var temp = questions[index]; questions[index] = questions[targetIndex]; questions[targetIndex] = temp; renderEditor(); renderPaperQuestions(); } }
+        function exportToPDF() { window.print(); }
+        function getInlineCss(f) { return `font-size:${f.size}; font-weight:${f.bold ? 'bold' : 'normal'}; font-style:${f.italic ? 'italic' : 'normal'}; text-decoration:${f.underline ? 'underline' : 'none'}; color:${isColor ? f.color : '#000000'}; background-color:${isColor ? f.bgColor : 'transparent'};`; }
+        function exportToWord() {
+            var paper = document.getElementById('examPaper'); var dir = paper.getAttribute('dir') || 'rtl';
+            var fontFamily = dir === 'rtl' ? '"Traditional Arabic", "Amiri", serif' : '"Times New Roman", Times, serif';
+            var borderSelect = document.getElementById('pageBorderSelect').value;
+            var borderStyle = 'border: 2.5pt solid #000000;';
+            if (borderSelect === 'page-border-simple') borderStyle = 'border: 1pt solid #000000;';
+            else if (borderSelect === 'page-border-double') borderStyle = 'border: 3pt double #000000;';
+            else if (borderSelect === 'page-border-dashed') borderStyle = 'border: 1.5pt dashed #000000;';
+            else if (borderSelect === 'page-border-none') borderStyle = 'border: none;';
+            var questionsHtml = '';
+            questions.forEach(function(q, idx) {
+                var borderBottom = (idx < questions.length - 1) ? 'border-bottom: 1pt solid #000000; padding-bottom: 8pt; margin-bottom: 8pt;' : 'padding-bottom: 2pt;';
+                var qSize = q.fontSize || '17px';
+                var qCss = `font-family:${fontFamily}; font-size:${qSize}; font-weight:${q.bold ? 'bold' : 'normal'}; font-style:${q.italic ? 'italic' : 'normal'}; text-decoration:${q.underline ? 'underline' : 'none'}; color:${isColor ? (q.color || '#000000') : '#000000'}; background-color:${isColor ? (q.bgColor || 'transparent') : 'transparent'}; padding:1pt 4pt;`;
+                var subsHtml = '';
+                if (q.subItems && q.subItems.length > 0) {
+                    q.subItems.forEach(function(sub) {
+                        var subSize = sub.fontSize || '15px';
+                        var sCss = `font-family:${fontFamily}; font-size:${subSize}; font-weight:${sub.bold ? 'bold' : 'normal'}; font-style:${sub.italic ? 'italic' : 'normal'}; text-decoration:${sub.underline ? 'underline' : 'none'}; color:${isColor ? (sub.color || '#000000') : '#000000'}; background-color:${isColor ? (sub.bgColor || 'transparent') : 'transparent'}; padding:1pt 3pt;`;
+                        subsHtml += '<table style="width:100%; border-collapse:collapse; margin-top:8pt;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + sCss + '">' + escapeHtml(sub.text) + '</span></td>' + (sub.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escapeHtml(sub.score) + '</td>' : '') + '</tr></table>';
+                    });
+                }
+                var noteCss = `font-family:${fontFamily}; font-size:13px; font-weight:${q.noteBold ? 'bold' : 'normal'}; font-style:${q.noteItalic ? 'italic' : 'normal'}; text-decoration:${q.noteUnderline ? 'underline' : 'none'}; color:${isColor ? (q.noteColor || '#000000') : '#000000'}; background-color:${isColor ? (q.noteBgColor || 'transparent') : 'transparent'}; padding:1pt 5pt;`;
+                var imgHtmlWord = '';
+                if (q.imgUrl) {
+                    var alignWord = q.imgAlign === 'right' ? 'right' : (q.imgAlign === 'left' ? 'left' : 'center');
+                    imgHtmlWord = '<div style="text-align:' + alignWord + '; margin:4pt 0;"><img src="' + q.imgUrl + '" width="' + (q.imgWidth || 150) + '" style="width:' + (q.imgWidth || 150) + 'pt; height:auto;" /></div>';
+                }
+                var pos = q.imgPos || 'afterNote';
+                questionsHtml += '<div style="' + borderBottom + '"><table style="width:100%; border-collapse:collapse;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + qCss + '">' + escapeHtml(q.title) + '</span></td>' + (q.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escapeHtml(q.score) + '</td>' : '') + '</tr></table>' + (pos === 'beforeNote' ? imgHtmlWord : '') + (q.note ? '<div style="text-align:center; margin:4pt 0;"><span style="' + noteCss + '">' + escapeHtml(q.note) + '</span></div>' : '') + (pos === 'afterNote' ? imgHtmlWord : '') + subsHtml + (pos === 'afterSub' ? imgHtmlWord : '') + '</div>';
+            });
+            var noteVisible = headerFields.Note.text.trim() !== "";
+            var footerVisible = headerFields.Teacher.text.trim() !== "" || headerFields.FooterLabel.text.trim() !== "" || headerFields.FooterName.text.trim() !== "";
+            var wordDoc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + escapeHtml(headerFields.ExamType.text || 'أسئلة امتحان') + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>@page Section1 { size: 210mm 297mm; mso-page-orientation: portrait; margin: 12mm 14mm 12mm 14mm; mso-header-margin: 0mm; mso-footer-margin: 0mm; } div.Section1 { page: Section1; font-family: ' + fontFamily + '; direction: ' + dir + '; } body { margin: 0; padding: 0; font-family: ' + fontFamily + '; } @page { mso-header: url(#emptyheader); mso-footer: url(#emptyfooter); }</style></head><body><div class="Section1"><table style="width:100%; border-collapse:collapse; ' + borderStyle + '"><tr><td style="padding:10pt 12pt; vertical-align:top;"><table style="width:100%; border-collapse:collapse; margin-bottom:6pt;"><tr><td style="width:33%; vertical-align:top; font-family:' + fontFamily + '; text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + getInlineCss(headerFields.School) + '">' + escapeHtml(headerFields.School.text) + '</span></td><td style="width:34%; vertical-align:top; font-family:' + fontFamily + '; text-align:center;"><div><span style="' + getInlineCss(headerFields.ExamType) + '">' + escapeHtml(headerFields.ExamType.text) + '</span></div><div><span style="' + getInlineCss(headerFields.YearLabel) + '">' + escapeHtml(headerFields.YearLabel.text) + '</span> <span style="' + getInlineCss(headerFields.Year) + '">' + escapeHtml(headerFields.Year.text) + '</span></div></td><td style="width:33%; vertical-align:top; font-family:' + fontFamily + '; text-align:' + (dir === 'rtl' ? 'left' : 'right') + ';"><div><span style="' + getInlineCss(headerFields.GradeLabel) + '">' + escapeHtml(headerFields.GradeLabel.text) + '</span> <span style="' + getInlineCss(headerFields.Grade) + '">' + escapeHtml(headerFields.Grade.text) + '</span></div><div><span style="' + getInlineCss(headerFields.SubjectLabel) + '">' + escapeHtml(headerFields.SubjectLabel.text) + '</span> <span style="' + getInlineCss(headerFields.Subject) + '">' + escapeHtml(headerFields.Subject.text) + '</span></div></td></tr></table>' + (noteVisible ? '<div style="text-align:center; margin:6pt 0;"><span style="font-family:' + fontFamily + '; padding:2pt 10pt; border:1pt solid #000000; ' + getInlineCss(headerFields.Note) + '">' + escapeHtml(headerFields.Note.text) + '</span></div>' : '') + '<div>' + questionsHtml + '</div>' + (footerVisible ? '<table style="width:100%; border-collapse:collapse; margin-top:28pt;"><tr><td style="width:25%;"></td><td style="width:50%; text-align:center; font-family:' + fontFamily + ';"><span style="' + getInlineCss(headerFields.Teacher) + '">' + escapeHtml(headerFields.Teacher.text).replace(/\n/g, '<br>') + '</span></td><td style="width:25%; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; font-family:' + fontFamily + ';"><span style="' + getInlineCss(headerFields.FooterLabel) + '">' + escapeHtml(headerFields.FooterLabel.text) + '</span><br/><span style="' + getInlineCss(headerFields.FooterName) + '">' + escapeHtml(headerFields.FooterName.text) + '</span></td></tr></table>' : '') + '</td></tr></table></div></body></html>';
+            var blob = new Blob(['\ufeff', wordDoc], { type: 'application/msword;charset=utf-8' });
+            var url = URL.createObjectURL(blob); var link = document.createElement('a'); link.href = url;
+            link.download = (headerFields.ExamType.text || 'اسئلة_امتحان').replace(/[\\/:*?"<>|]/g, '_') + '.doc';
+            document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+        }
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() { navigator.serviceWorker.register('./sw.js').catch(function() {}); });
+        }
+        window.onload = function() { renderHeaderEditor(); updatePaper(); renderEditor(); renderPaperQuestions(); updatePageBorder(); };
+    </script>
+</body>
+</html>
