@@ -176,6 +176,7 @@ select.in{padding-block:0;height:40px}
 .exam-paper-font-ar{font-family:'Amiri','Traditional Arabic',serif}
 .exam-paper-font-en{font-family:'Times New Roman',Times,serif}
 .a4-page img{max-width:100%;vertical-align:middle}
+.a4-page span{unicode-bidi:plaintext}
 .bw-mode{filter:grayscale(100%)!important}
 .bw-mode *{background-color:transparent!important;color:#000!important;border-color:#000!important}
 .page-border-none{border:none!important}
@@ -220,6 +221,16 @@ select.in{padding-block:0;height:40px}
 .shape-oval{background:#dbeafe;color:#1e3a8a;border-radius:50%;width:120px;height:55px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;font-weight:700;box-shadow:inset 0 0 8px rgba(59,130,246,.2);padding:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
 /* ============ تنبيه + تنقل الهاتف ============ */
+
+.sheet-bg{position:fixed;inset:0;background:rgba(10,25,60,.5);display:grid;place-items:center;z-index:40;padding:16px}
+.sheet{background:#fff;border-radius:16px;width:min(430px,100%);max-height:90dvh;overflow:auto;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px}
+.sheet-h h3{margin:0;color:var(--brand-dk);font-size:15px}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:start;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.opt:hover{border-color:var(--brand);background:var(--brand-soft)}
+.opt b{display:block;line-height:1.3}
+.opt small{color:var(--ink2);font-size:12px}
+.oi{width:38px;height:38px;border-radius:10px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:800;flex:none;font-size:15px}
 .toast{position:fixed;left:50%;bottom:84px;transform:translate(-50%,20px);background:#15213d;color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .mobile-nav{display:none}
@@ -249,13 +260,15 @@ select.in{padding-block:0;height:40px}
   .mobile-nav button{border:0;background:none;padding:9px 0 8px;display:grid;justify-items:center;gap:2px;font-weight:700;font-size:12.5px;color:var(--ink2);border-top:3px solid transparent}
   .mobile-nav button.on{color:var(--brand);border-top-color:var(--brand);background:var(--brand-soft)}
   .qtools .icon-btn{width:34px}
+  .sheet-bg{place-items:end center;padding:0}
+  .sheet{width:100%;border-radius:18px 18px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 }
 
 /* ============ الطباعة ============ */
 @page{size:A4 portrait;margin:0}
 @media print{
   html,body{width:210mm!important;height:296mm!important;max-height:296mm!important;background:#fff!important;margin:0!important;padding:0!important;overflow:hidden!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  .no-print,.toast{display:none!important}
+  .no-print,.toast,.sheet-bg{display:none!important}
   .app{display:block!important;height:auto!important}
   .preview,.stage{display:block!important;padding:0!important;margin:0!important;background:#fff!important;overflow:visible!important;width:210mm!important;height:296mm!important}
   .scaler{position:static!important;width:210mm!important;height:296mm!important;margin:0!important}
@@ -288,6 +301,7 @@ select.in{padding-block:0;height:40px}
 <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></symbol>
 <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></symbol>
 <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 <symbol id="i-a-r" viewBox="0 0 24 24"><path d="M4 6h16M10 12h10M6 18h14"/></symbol>
 <symbol id="i-a-c" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M5 18h14"/></symbol>
 <symbol id="i-a-l" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h14"/></symbol>
@@ -428,6 +442,16 @@ select.in{padding-block:0;height:40px}
     <button type="button" data-pane="preview" onclick="setPane('preview')"><svg class="ic"><use href="#i-eye"/></svg>معاينة</button>
   </nav>
 </div>
+<div class="sheet-bg no-print" id="qSheet" hidden onclick="if(event.target===this)closeQSheet()">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="اختيار نوع السؤال">
+    <div class="sheet-h"><h3>ما نوع السؤال الجديد؟</h3><button type="button" class="icon-btn" onclick="closeQSheet()" aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <button type="button" class="opt" onclick="createQuestion('blank')"><span class="oi"><svg class="ic"><use href="#i-plus"/></svg></span><span><b>سؤال فارغ</b><small>عنوان وفرعان تكتبهما بنفسك</small></span></button>
+    <button type="button" class="opt" onclick="createQuestion('mcq')"><span class="oi">أ ب</span><span><b>اختيار من متعدد</b><small>اختاري الإجابة الصحيحة من بين الأقواس</small></span></button>
+    <button type="button" class="opt" onclick="createQuestion('tf')"><span class="oi">✓</span><span><b>صح وخطأ</b><small>ضعي علامة أمام كل عبارة</small></span></button>
+    <button type="button" class="opt" onclick="createQuestion('fill')"><span class="oi">…</span><span><b>أكمل الفراغات</b><small>جمل ناقصة لتكملتها</small></span></button>
+    <button type="button" class="opt" onclick="createQuestion('reason')"><span class="oi">؟</span><span><b>علّل</b><small>اذكر السبب لكل عبارة</small></span></button>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -522,7 +546,7 @@ function fieldHTML(t, label, opt) {
   if (K.size && opt.sizes) {
     var list = opt.sizes.slice(), cur = parseFloat(o[K.size]);
     if (cur && list.indexOf(cur) < 0) { list.push(cur); list.sort(function (a, b) { return a - b; }); }
-    sizeHTML = '<span class="fmt-sep"></span><select class="sel-size" aria-label="حجم الخط" onchange="setSize(this,\'' + t + '\')">' +
+    sizeHTML = '<select class="sel-size" aria-label="حجم الخط" onchange="setSize(this,\'' + t + '\')">' +
       list.map(function (s) { return '<option value="' + s + 'px"' + (s === cur ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>';
   }
   var score = opt.score ? '<input class="in score" type="text" placeholder="الدرجة" aria-label="الدرجة" value="' + escapeHtml(o.score || '') + '" oninput="onScore(this,\'' + t + '\')">' : '';
@@ -535,7 +559,6 @@ function fieldHTML(t, label, opt) {
       '<button type="button" class="tb b' + (o[K.bold] ? ' active' : '') + '" title="غامق" aria-label="غامق" onclick="toggleSt(this,\'' + t + '\',\'bold\')">B</button>' +
       '<button type="button" class="tb i' + (o[K.italic] ? ' active' : '') + '" title="مائل" aria-label="مائل" onclick="toggleSt(this,\'' + t + '\',\'italic\')">I</button>' +
       '<button type="button" class="tb u' + (o[K.underline] ? ' active' : '') + '" title="تحته خط" aria-label="تحته خط" onclick="toggleSt(this,\'' + t + '\',\'underline\')">U</button>' +
-      '<span class="fmt-sep"></span>' +
       '<label class="clr" title="لون الخط"><span class="clr-a" style="color:' + escapeHtml(o[K.color] || '#000000') + '">A</span><input type="color" value="' + escapeHtml(o[K.color] || '#000000') + '" oninput="setClr(this,\'' + t + '\',\'color\')"></label>' +
       '<label class="clr clr-bg' + (hasBg ? '' : ' none') + '" title="لون الخلفية (تمييز)"><span class="clr-sw" style="background:' + escapeHtml(bgv) + '"></span><input type="color" value="' + escapeHtml(bgv) + '" oninput="setClr(this,\'' + t + '\',\'bg\')"></label>' +
       '<button type="button" class="tb" title="بلا خلفية" aria-label="بلا خلفية" onclick="clearBg(this,\'' + t + '\')">' + ic('ban') + '</button>' +
@@ -723,9 +746,28 @@ function toggleQ(id) {
   if (opening) { var el = document.querySelector('.qcard[data-id="' + id + '"]'); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
 function structural() { renderQuestionsEditor(); renderPaperQuestions(); changed(); }
-function addQuestion() {
-  var q = qDefaults(); q.id = Date.now(); q.title = 'س ' + (questions.length + 1) + '/ اكتب عنوان السؤال الجديد هنا :'; q.score = '(15 د)';
-  q.subItems = [Object.assign(subDefaults(), { text: '1- الفرع الأول : __________________' }), Object.assign(subDefaults(), { text: '2- الفرع الثاني : __________________' })];
+var QT = {
+  ar: { score: '(15 د)', pre: function (n) { return 'س ' + n + '/ '; },
+    blank: { t: 'اكتبي عنوان السؤال هنا :', subs: ['1- الفرع الأول : __________________', '2- الفرع الثاني : __________________'] },
+    mcq: { t: 'اختاري الإجابة الصحيحة من بين الأقواس :', subs: ['1- ..... (        -        -        )', '2- ..... (        -        -        )', '3- ..... (        -        -        )'] },
+    tf: { t: 'ضعي علامة (✓) أمام العبارة الصحيحة وعلامة (✗) أمام العبارة الخاطئة :', subs: ['1- ........................................ (     )', '2- ........................................ (     )', '3- ........................................ (     )'] },
+    fill: { t: 'أكملي الفراغات الآتية :', subs: ['1- ........................................', '2- ........................................', '3- ........................................'] },
+    reason: { t: 'علّلي ما يأتي :', subs: ['1- ........................................ ؟', '2- ........................................ ؟'] } },
+  en: { score: '(15 marks)', pre: function (n) { return 'Q' + n + '/ '; },
+    blank: { t: 'Write the question title here:', subs: ['1- First part: __________________', '2- Second part: __________________'] },
+    mcq: { t: 'Choose the correct answer:', subs: ['1- ..... (        -        -        )', '2- ..... (        -        -        )', '3- ..... (        -        -        )'] },
+    tf: { t: 'Put (T) for true and (F) for false:', subs: ['1- ........................................ (     )', '2- ........................................ (     )', '3- ........................................ (     )'] },
+    fill: { t: 'Fill in the blanks:', subs: ['1- ........................................', '2- ........................................', '3- ........................................'] },
+    reason: { t: 'Give reasons:', subs: ['1- ........................................ ?', '2- ........................................ ?'] } }
+};
+function addQuestion() { $('qSheet').hidden = false; }
+function closeQSheet() { $('qSheet').hidden = true; }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeQSheet(); });
+function createQuestion(type) {
+  closeQSheet();
+  var L = QT[currentLang === 'en-GB' ? 'en' : 'ar'], tpl = L[type] || L.blank;
+  var q = qDefaults(); q.id = Date.now(); q.title = L.pre(questions.length + 1) + tpl.t; q.score = L.score;
+  q.subItems = tpl.subs.map(function (t) { return Object.assign(subDefaults(), { text: t }); });
   questions.push(q); ui.openQ = q.id; showTab('questions'); structural();
   var el = document.querySelector('.qcard[data-id="' + q.id + '"]'); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   toast('تمت إضافة السؤال ' + questions.length);
@@ -824,9 +866,9 @@ function measure() {
   var last = footVisible ? $('paperFooterDiv') : p.querySelector('.paper-content-area');
   var used = last.offsetTop + last.offsetHeight - pt, avail = p.clientHeight - pt - pb;
   var pct = Math.max(0, Math.round(used / avail * 100)); ui.pct = pct;
-  var m = $('meter'); m.dataset.s = pct > 100 ? 'over' : (pct >= 92 ? 'tight' : 'ok');
+  var m = $('meter'); m.dataset.s = pct > 100 ? 'over' : (pct >= 98 ? 'tight' : 'ok');
   $('meterFill').style.width = Math.min(100, pct) + '%';
-  $('meterTxt').textContent = pct > 100 ? 'يتجاوز الصفحة (' + pct + '%)' : (pct >= 92 ? 'الصفحة شبه ممتلئة (' + pct + '%)' : 'يملأ ' + pct + '% من الصفحة');
+  $('meterTxt').textContent = pct > 100 ? 'يتجاوز الصفحة (' + pct + '%)' : (pct >= 98 ? 'الصفحة شبه ممتلئة (' + pct + '%)' : 'يملأ ' + pct + '% من الصفحة');
 }
 
 /* ---------- الحفظ التلقائي ---------- */
