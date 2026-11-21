@@ -222,6 +222,17 @@ select.in{padding-block:0;height:40px}
 
 /* ============ تنبيه + تنقل الهاتف ============ */
 
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--brand)}
+.steps{display:flex;gap:10px;margin-bottom:8px}
+.stepper{flex:1;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line2);border-radius:10px;padding:4px 8px}
+.stepper span{flex:1;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.stepper button{width:30px;height:30px;border:1px solid var(--line2);background:var(--soft);border-radius:8px;font-weight:800;font-size:16px;line-height:1}
+.stepper b{min-width:20px;text-align:center}
+.cellgrid{display:grid;gap:4px;margin-top:10px}
+.cell{padding:6px 6px;min-height:36px;text-align:center;font-size:13px}
+.cell.hd{background:var(--brand-soft);font-weight:700}
+.seg button{padding-inline:4px}
 .sheet-bg{position:fixed;inset:0;background:rgba(10,25,60,.5);display:grid;place-items:center;z-index:40;padding:16px}
 .sheet{background:#fff;border-radius:16px;width:min(430px,100%);max-height:90dvh;overflow:auto;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .sheet-h{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px}
@@ -366,6 +377,14 @@ select.in{padding-block:0;height:40px}
           <p class="hint">يضع نصوص الترويسة والتذييل الجاهزة للغة المختارة، ولا يغيّر الأسئلة.</p>
         </section>
         <section class="card">
+          <h3 class="card-t">صيغة التعليمات</h3>
+          <div class="seg" id="genderSeg">
+            <button type="button" data-g="f" onclick="setGender('f')">مؤنث (اكتبي)</button>
+            <button type="button" data-g="m" onclick="setGender('m')">مذكر (اكتب)</button>
+          </div>
+          <p class="hint">تُستعمل في عناوين الأسئلة الجاهزة عند إضافتها.</p>
+        </section>
+        <section class="card">
           <h3 class="card-t">إطار الصفحة</h3>
           <div class="bgrid" id="borderGrid">
             <button type="button" class="bopt" data-b="page-border-pdf-exact" onclick="setBorder('page-border-pdf-exact')"><span class="bpv page-border-pdf-exact"></span>الأصلي</button>
@@ -445,11 +464,7 @@ select.in{padding-block:0;height:40px}
 <div class="sheet-bg no-print" id="qSheet" hidden onclick="if(event.target===this)closeQSheet()">
   <div class="sheet" role="dialog" aria-modal="true" aria-label="اختيار نوع السؤال">
     <div class="sheet-h"><h3>ما نوع السؤال الجديد؟</h3><button type="button" class="icon-btn" onclick="closeQSheet()" aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <button type="button" class="opt" onclick="createQuestion('blank')"><span class="oi"><svg class="ic"><use href="#i-plus"/></svg></span><span><b>سؤال فارغ</b><small>عنوان وفرعان تكتبهما بنفسك</small></span></button>
-    <button type="button" class="opt" onclick="createQuestion('mcq')"><span class="oi">أ ب</span><span><b>اختيار من متعدد</b><small>اختاري الإجابة الصحيحة من بين الأقواس</small></span></button>
-    <button type="button" class="opt" onclick="createQuestion('tf')"><span class="oi">✓</span><span><b>صح وخطأ</b><small>ضعي علامة أمام كل عبارة</small></span></button>
-    <button type="button" class="opt" onclick="createQuestion('fill')"><span class="oi">…</span><span><b>أكمل الفراغات</b><small>جمل ناقصة لتكملتها</small></span></button>
-    <button type="button" class="opt" onclick="createQuestion('reason')"><span class="oi">؟</span><span><b>علّل</b><small>اذكر السبب لكل عبارة</small></span></button>
+    <div id="sheetList"></div>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -458,7 +473,7 @@ select.in{padding-block:0;height:40px}
 var $ = function (id) { return document.getElementById(id); };
 var KEY = 'questionDesigner.v1';
 var isColor = true, currentLang = 'ar-IQ';
-var ui = { tab: 'header', openQ: null, fmt: {}, zoom: 'fit', scale: 1, pct: 0 };
+var ui = { pass: {}, tab: 'header', openQ: null, fmt: {}, zoom: 'fit', scale: 1, pct: 0 };
 
 var headerFields = {
             School: { label: "اسم المدرسة / الجهة:", text: "أعدادية المعرفة للبنات", size: "16px", bold: true, italic: false, underline: false, color: "#000000", bgColor: "transparent" },
@@ -521,8 +536,8 @@ function R(t) {
   else o = findQ(p[1]);
   return o ? { o: o, K: KM[k], kind: k } : null;
 }
-function qDefaults() { return { id: 0, title: '', score: '', fontSize: '17px', bold: true, italic: false, underline: false, color: '#000000', bgColor: '#ffff00', note: '', noteBold: true, noteItalic: false, noteUnderline: false, noteColor: '#000000', noteBgColor: 'transparent', imgUrl: '', imgWidth: '150', imgHeight: 'auto', imgAlign: 'center', imgPos: 'afterNote', subItems: [] }; }
-function subDefaults() { return { text: '', score: '', fontSize: '15px', bold: true, italic: false, underline: false, color: '#000000', bgColor: 'transparent' }; }
+function qDefaults() { return { id: 0, title: '', score: '', fontSize: '17px', bold: true, italic: false, underline: false, color: '#000000', bgColor: '#ffff00', note: '', noteBold: true, noteItalic: false, noteUnderline: false, noteColor: '#000000', noteBgColor: 'transparent', imgUrl: '', imgWidth: '150', imgHeight: 'auto', imgAlign: 'center', imgPos: 'afterNote', subItems: [], kind: 'list', passage: '', poem: false, optLayout: 'row', tfMode: 'bracket', tfFix: false, matchMode: 'bracket', ans: { mode: 'none', n: 3, each: false }, table: { rows: 3, cols: 3, head: true, cells: [] } }; }
+function subDefaults() { return { text: '', score: '', fontSize: '15px', bold: true, italic: false, underline: false, color: '#000000', bgColor: 'transparent', opts: ['', '', '', ''], text2: '' }; }
 
 /* ---------- بناء حقل نص قابل للتنسيق ---------- */
 var HL = [
@@ -686,6 +701,7 @@ function setColorMode(on) {
 }
 function syncControls() {
   document.querySelectorAll('#langSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === currentLang); });
+  document.querySelectorAll('#genderSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.g === gender); });
   var bv = $('pageBorderSelect').value; document.querySelectorAll('#borderGrid .bopt').forEach(function (b) { b.classList.toggle('on', b.dataset.b === bv); });
   var sv = $('signatureShape').value; document.querySelectorAll('#shapeSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.shape === sv); });
   document.querySelectorAll('#colorSeg button').forEach(function (b) { b.classList.toggle('on', (b.dataset.color === '1') === isColor); });
@@ -715,6 +731,71 @@ function imgHTML(q) {
       [['beforeNote', 'قبل التوضيح'], ['afterNote', 'بعد التوضيح'], ['afterSub', 'بعد الفروع']].map(function (o) { return '<option value="' + o[0] + '"' + (q.imgPos === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
     '</select></div></div></div>';
 }
+/* ---------- أنواع الأسئلة: واجهة التحرير ---------- */
+var KINDS = [['list', 'قائمة'], ['mcq', 'اختيار'], ['tf', 'صح/خطأ'], ['match', 'مطابقة'], ['table', 'جدول']];
+function kindHTML(q) {
+  var k = q.kind || 'list';
+  return '<div><span class="lab-s">نوع السؤال</span><div class="seg">' + KINDS.map(function (x) { return '<button type="button" class="' + (k === x[0] ? 'on' : '') + '" onclick="setKind(\'' + q.id + '\',\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div></div>';
+}
+function setKind(id, k) { var q = findQ(id); if (!q) return; q.kind = k; normQ(q); structural(); }
+function setQOptR(id, prop, val) { var q = findQ(id); if (!q) return; q[prop] = val; structural(); }
+function segHTML(id, prop, cur, items) {
+  return '<div class="seg">' + items.map(function (x) { return '<button type="button" class="' + (cur === x[0] ? 'on' : '') + '" onclick="setQOptR(\'' + id + '\',\'' + prop + '\',\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
+}
+function chkHTML(id, prop, on, label) { return '<label class="chk"><input type="checkbox"' + (on ? ' checked' : '') + ' onchange="setQOptR(\'' + id + '\',\'' + prop + '\',this.checked)"> ' + label + '</label>'; }
+function kindOptsHTML(q) {
+  var k = q.kind || 'list', id = q.id;
+  if (k === 'mcq') return '<div><span class="lab-s">ترتيب الخيارات</span>' + segHTML(id, 'optLayout', q.optLayout, [['row', 'صف واحد'], ['grid', 'عمودان'], ['col', 'قائمة']]) + '</div>';
+  if (k === 'tf') return '<div><span class="lab-s">شكل الإجابة</span>' + segHTML(id, 'tfMode', q.tfMode, [['bracket', 'قوس ( )'], ['circle', 'صح / خطأ']]) + chkHTML(id, 'tfFix', q.tfFix, 'اطلب تصحيح العبارة الخاطئة') + '</div>';
+  if (k === 'match') return '<div><span class="lab-s">شكل الربط</span>' + segHTML(id, 'matchMode', q.matchMode, [['bracket', 'حرف في القوس'], ['line', 'خط توصيل']]) + '<p class="hint">العمود الأول يُرقَّم (1، 2…) والثاني (أ، ب…) تلقائياً.</p></div>';
+  return '';
+}
+function optsHTML(q, idx) {
+  var L = optLabels(), s = q.subItems[idx];
+  return '<div style="margin-top:8px"><span class="lab-s">الخيارات (اترك الفارغ بلا استخدام)</span><div class="grid2">' + [0, 1, 2, 3].map(function (j) {
+    return '<input class="in" type="text" placeholder="' + L[j] + '" value="' + escapeHtml(s.opts[j] || '') + '" oninput="setOpt(\'' + q.id + '\',' + idx + ',' + j + ',this)" aria-label="الخيار ' + (j + 1) + '">';
+  }).join('') + '</div></div>';
+}
+function setOpt(id, idx, j, el) { var q = findQ(id); if (!q) return; q.subItems[idx].opts[j] = el.value; renderPaperQuestions(); changed(); }
+function text2HTML(q, idx) {
+  return '<div style="margin-top:8px"><span class="lab-s">العمود الثاني</span><textarea class="in grow" rows="1" onkeydown="if(event.key===\'Enter\')event.preventDefault()" oninput="setText2(\'' + q.id + '\',' + idx + ',this)">' + escapeHtml(q.subItems[idx].text2 || '') + '</textarea></div>';
+}
+function setText2(id, idx, el) { var q = findQ(id); if (!q) return; q.subItems[idx].text2 = el.value; autogrow(el); renderPaperQuestions(); changed(); }
+
+function passageEditorHTML(q) {
+  if (!q.passage && !ui.pass[q.id]) return '<button type="button" class="link-btn" onclick="openPassage(\'' + q.id + '\')">' + ic('plus') + 'إضافة نص / قطعة قراءة</button>';
+  return '<div class="imgbox"><div class="sec-t"><span>نص / قطعة قراءة</span>' + chkHTML(q.id, 'poem', q.poem, 'شعر').replace('class="chk"', 'class="chk" style="margin:0"') + '</div>' +
+    '<textarea class="in grow" data-multi="1" rows="3" placeholder="' + (q.poem ? 'اكتب كل بيت في سطر، وافصل الصدر عن العجز بعلامة *' : 'الصق أو اكتب النص هنا') + '" oninput="setPassage(\'' + q.id + '\',this)">' + escapeHtml(q.passage) + '</textarea></div>';
+}
+function openPassage(id) { ui.pass[id] = true; renderQuestionsEditor(); var ta = document.querySelector('.qcard[data-id="' + id + '"] textarea[data-multi][oninput^="setPassage"]'); if (ta) ta.focus(); }
+function setPassage(id, el) { var q = findQ(id); if (!q) return; q.passage = el.value; autogrow(el); renderPaperQuestions(); changed(); }
+
+function tableEditorHTML(q) {
+  var t = q.table, id = q.id, g = '';
+  for (var r = 0; r < t.rows; r++) for (var k = 0; k < t.cols; k++) g += '<input class="in cell' + (t.head && r === 0 ? ' hd' : '') + '" value="' + escapeHtml((t.cells[r] && t.cells[r][k]) || '') + '" oninput="setCell(\'' + id + '\',' + r + ',' + k + ',this)" aria-label="خلية ' + (r + 1) + '-' + (k + 1) + '">';
+  function st(lbl, key) { return '<div class="stepper"><span>' + lbl + '</span><button type="button" onclick="tblDim(\'' + id + '\',\'' + key + '\',-1)" aria-label="إنقاص">−</button><b>' + t[key] + '</b><button type="button" onclick="tblDim(\'' + id + '\',\'' + key + '\',1)" aria-label="زيادة">+</button></div>'; }
+  return '<div class="imgbox"><div class="sec-t"><span>الجدول</span></div><div class="steps">' + st('الصفوف', 'rows') + st('الأعمدة', 'cols') + '</div>' +
+    '<label class="chk"><input type="checkbox"' + (t.head ? ' checked' : '') + ' onchange="tblHead(\'' + id + '\',this.checked)"> الصف الأول عناوين (غامق)</label>' +
+    '<div class="cellgrid" style="grid-template-columns:repeat(' + t.cols + ',minmax(0,1fr))">' + g + '</div><p class="hint">اترك الخلية فارغة ليملأها الطالب.</p></div>';
+}
+function setCell(id, r, k, el) { var q = findQ(id); if (!q) return; var t = q.table; while (t.cells.length <= r) t.cells.push([]); while (t.cells[r].length <= k) t.cells[r].push(''); t.cells[r][k] = el.value; renderPaperQuestions(); changed(); }
+function tblDim(id, key, d) { var q = findQ(id); if (!q) return; q.table[key] = Math.max(1, Math.min(key === 'rows' ? 15 : 6, q.table[key] + d)); structural(); }
+function tblHead(id, on) { var q = findQ(id); if (!q) return; q.table.head = on; structural(); }
+
+function ansEditorHTML(q) {
+  var a = q.ans, id = q.id, m = a.mode, k = q.kind || 'list';
+  function b(v, l) { return '<button type="button" class="' + (m === v ? 'on' : '') + '" onclick="setAns(\'' + id + '\',\'' + v + '\')">' + l + '</button>'; }
+  var more = '';
+  if (m !== 'none') {
+    more = '<div class="rng" style="margin:10px 0 0"><span class="lab-s" style="margin:0;flex:1">' + (m === 'lines' ? 'عدد السطور' : 'ارتفاع الفراغ (سم)') + '</span><input type="number" class="in" style="width:84px;text-align:center" min="1" max="' + (m === 'lines' ? 12 : 15) + '" value="' + a.n + '" oninput="setAnsN(\'' + id + '\',this)"></div>';
+    if (k === 'list' || k === 'mcq' || k === 'tf') more += '<label class="chk"><input type="checkbox"' + (a.each ? ' checked' : '') + ' onchange="setAnsEach(\'' + id + '\',this.checked)"> كرّر تحت كل فرع</label>';
+  }
+  return '<div class="imgbox"><div class="sec-t"><span>مساحة الإجابة</span></div><div class="seg">' + b('none', 'بدون') + b('lines', 'سطور') + b('space', 'فراغ للحل') + '</div>' + more + '</div>';
+}
+function setAns(id, m) { var q = findQ(id); if (!q) return; if (q.ans.mode !== m) q.ans.n = m === 'lines' ? 3 : 4; q.ans.mode = m; structural(); }
+function setAnsN(id, el) { var q = findQ(id); if (!q) return; q.ans.n = Math.max(1, Math.min(q.ans.mode === 'lines' ? 12 : 15, +el.value || 1)); renderPaperQuestions(); changed(); }
+function setAnsEach(id, on) { var q = findQ(id); if (!q) return; q.ans.each = on; structural(); }
+
 function qCardHTML(q, i) {
   var open = String(ui.openQ) === String(q.id), id = q.id;
   var head = '<div class="qhead"><button type="button" class="qmain" aria-expanded="' + open + '" onclick="toggleQ(\'' + id + '\')"><span class="qnum">' + (i + 1) + '</span><span class="qsum"><span class="qtitle">' + escapeHtml(q.title || 'سؤال بدون عنوان') + '</span><span class="qmeta">' + qMetaText(q) + '</span></span><span class="chev">' + ic('chev') + '</span></button>' +
@@ -724,18 +805,37 @@ function qCardHTML(q, i) {
     '<button type="button" class="icon-btn danger" title="حذف السؤال" aria-label="حذف السؤال" onclick="deleteQuestion(\'' + id + '\')">' + ic('trash') + '</button></div></div>';
   var body = '';
   if (open) {
+    var k = q.kind || 'list', lab = k === 'mcq' ? 'سؤال' : k === 'tf' ? 'عبارة' : k === 'match' ? 'زوج' : 'فرع';
     var subs = (q.subItems || []).map(function (s, idx) {
-      var del = '<button type="button" class="icon-btn danger" title="حذف الفرع" aria-label="حذف الفرع" onclick="deleteSubItem(\'' + id + '\',' + idx + ')">' + ic('trash') + '</button>';
-      return '<div class="sub">' + fieldHTML('s:' + id + ':' + idx, 'فرع ' + (idx + 1), { sizes: SSIZES, score: true, extra: del }) + '</div>';
+      var del = '<button type="button" class="icon-btn danger" title="حذف" aria-label="حذف" onclick="deleteSubItem(\'' + id + '\',' + idx + ')">' + ic('trash') + '</button>';
+      var first = k === 'match' ? 'العمود الأول (' + (idx + 1) + ')' : lab + ' ' + (idx + 1);
+      return '<div class="sub">' + fieldHTML('s:' + id + ':' + idx, first, { sizes: SSIZES, score: k !== 'match', extra: del }) + (k === 'mcq' ? optsHTML(q, idx) : '') + (k === 'match' ? text2HTML(q, idx) : '') + '</div>';
     }).join('');
-    body = '<div class="qbody">' +
-      fieldHTML('q:' + id, 'عنوان السؤال', { sizes: QSIZES, score: true }) +
-      fieldHTML('n:' + id, 'توضيح إضافي أو خيارات (اختياري)', {}) +
-      imgHTML(q) +
-      '<div><div class="sec-t"><span>فروع السؤال</span><button type="button" class="link-btn" onclick="addSubItem(\'' + id + '\')">' + ic('plus') + 'إضافة فرع</button></div>' + (subs || '<p class="hint" style="margin:0">لا توجد فروع بعد.</p>') + '</div></div>';
+    var items = k === 'table' ? tableEditorHTML(q) : '<div><div class="sec-t"><span>' + (k === 'mcq' ? 'الأسئلة' : k === 'tf' ? 'العبارات' : k === 'match' ? 'أزواج الربط' : 'فروع السؤال') + '</span><button type="button" class="link-btn" onclick="addSubItem(\'' + id + '\')">' + ic('plus') + 'إضافة</button></div>' + (subs || '<p class="hint" style="margin:0">لا توجد عناصر بعد.</p>') + '</div>';
+    body = '<div class="qbody">' + fieldHTML('q:' + id, 'عنوان السؤال', { sizes: QSIZES, score: true }) + kindHTML(q) + kindOptsHTML(q) +
+      fieldHTML('n:' + id, 'توضيح إضافي (اختياري)', {}) + passageEditorHTML(q) + imgHTML(q) + items + ansEditorHTML(q) + '</div>';
   }
   return '<div class="qcard' + (open ? ' open' : '') + '" data-id="' + id + '">' + head + body + '</div>';
 }
+
+/* ---------- تطبيع بيانات السؤال (تحميل / تبديل النوع) ---------- */
+function normQ(q) {
+  var cl = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  if (['list', 'mcq', 'tf', 'match', 'table'].indexOf(q.kind) < 0) q.kind = 'list';
+  if (['row', 'grid', 'col'].indexOf(q.optLayout) < 0) q.optLayout = 'row';
+  if (['bracket', 'circle'].indexOf(q.tfMode) < 0) q.tfMode = 'bracket';
+  if (['bracket', 'line'].indexOf(q.matchMode) < 0) q.matchMode = 'bracket';
+  q.tfFix = !!q.tfFix; q.poem = !!q.poem; q.passage = String(q.passage || '');
+  var a = (q.ans && typeof q.ans === 'object') ? q.ans : {};
+  q.ans = { mode: ['none', 'lines', 'space'].indexOf(a.mode) >= 0 ? a.mode : 'none', n: cl(+a.n || 3, 1, 15), each: !!a.each };
+  var t = (q.table && typeof q.table === 'object') ? q.table : {};
+  q.table = { rows: cl(+t.rows || 3, 1, 15), cols: cl(+t.cols || 3, 1, 6), head: t.head !== false, cells: Array.isArray(t.cells) ? t.cells.slice(0, 15).map(function (r) { return Array.isArray(r) ? r.slice(0, 6).map(String) : []; }) : [] };
+  (q.subItems || []).forEach(function (s) {
+    s.opts = (Array.isArray(s.opts) ? s.opts : []).slice(0, 5).map(String); while (s.opts.length < 4) s.opts.push('');
+    s.text2 = String(s.text2 || '');
+  });
+}
+
 function renderQuestionsEditor() {
   $('questionsList').innerHTML = questions.length ? questions.map(qCardHTML).join('') : '<p class="hint" style="text-align:center;padding:18px 0">لا توجد أسئلة. اضغط «سؤال جديد» للبدء.</p>';
   $('qCount').textContent = questions.length; growAll();
@@ -746,29 +846,54 @@ function toggleQ(id) {
   if (opening) { var el = document.querySelector('.qcard[data-id="' + id + '"]'); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
 function structural() { renderQuestionsEditor(); renderPaperQuestions(); changed(); }
-var QT = {
-  ar: { score: '(15 د)', pre: function (n) { return 'س ' + n + '/ '; },
-    blank: { t: 'اكتبي عنوان السؤال هنا :', subs: ['1- الفرع الأول : __________________', '2- الفرع الثاني : __________________'] },
-    mcq: { t: 'اختاري الإجابة الصحيحة من بين الأقواس :', subs: ['1- ..... (        -        -        )', '2- ..... (        -        -        )', '3- ..... (        -        -        )'] },
-    tf: { t: 'ضعي علامة (✓) أمام العبارة الصحيحة وعلامة (✗) أمام العبارة الخاطئة :', subs: ['1- ........................................ (     )', '2- ........................................ (     )', '3- ........................................ (     )'] },
-    fill: { t: 'أكملي الفراغات الآتية :', subs: ['1- ........................................', '2- ........................................', '3- ........................................'] },
-    reason: { t: 'علّلي ما يأتي :', subs: ['1- ........................................ ؟', '2- ........................................ ؟'] } },
-  en: { score: '(15 marks)', pre: function (n) { return 'Q' + n + '/ '; },
-    blank: { t: 'Write the question title here:', subs: ['1- First part: __________________', '2- Second part: __________________'] },
-    mcq: { t: 'Choose the correct answer:', subs: ['1- ..... (        -        -        )', '2- ..... (        -        -        )', '3- ..... (        -        -        )'] },
-    tf: { t: 'Put (T) for true and (F) for false:', subs: ['1- ........................................ (     )', '2- ........................................ (     )', '3- ........................................ (     )'] },
-    fill: { t: 'Fill in the blanks:', subs: ['1- ........................................', '2- ........................................', '3- ........................................'] },
-    reason: { t: 'Give reasons:', subs: ['1- ........................................ ?', '2- ........................................ ?'] } }
-};
+/* ---------- إضافة سؤال جديد: قوالب جاهزة لكل نوع ---------- */
+var gender = 'f';
+function G(f, m) { return gender === 'm' ? m : f; }
+function setGender(g) { gender = g; syncControls(); changed(); }
+var QTYPES = [
+  ['blank', '+', 'سؤال فارغ', 'عنوان وفرعان تكتبهما بنفسك'],
+  ['mcq', 'أ ب', 'اختيار من متعدد', 'سؤال وأربعة خيارات'],
+  ['tf', '✓', 'صح وخطأ', 'عبارات بقوس أو دائرة'],
+  ['fill', '…', 'أكمل الفراغات', 'جمل ناقصة'],
+  ['reason', '؟', 'علّل', 'مع سطور للإجابة'],
+  ['match', '⇄', 'مطابقة', 'عمودان للربط بينهما'],
+  ['table', '▦', 'جدول', 'خلايا يملؤها الطالب'],
+  ['read', '❝', 'قطعة قراءة', 'نص أو شعر ثم أسئلة عليه'],
+  ['calc', '∑', 'مسائل وحلول', 'مع فراغ للحل'],
+  ['essay', '✎', 'سؤال مقالي', 'اشرح مع سطور للإجابة']
+];
+function renderSheet() {
+  $('sheetList').innerHTML = QTYPES.map(function (t) { return '<button type="button" class="opt" onclick="createQuestion(\'' + t[0] + '\')"><span class="oi">' + (t[1] === '+' ? ic('plus') : t[1]) + '</span><span><b>' + t[2] + '</b><small>' + t[3] + '</small></span></button>'; }).join('');
+}
+function mkSub(text, extra) { return Object.assign(subDefaults(), { text: text }, extra || {}); }
+function buildQuestion(type) {
+  var en = currentLang === 'en-GB', n = questions.length + 1, q = qDefaults(), dl = '........................................', ds = '..........';
+  q.id = Date.now(); q.score = en ? '(15 marks)' : '(15 د)';
+  var Q = en ? '?' : '؟';
+  function list(k, suf, ex) { var a = []; for (var i = 1; i <= k; i++) a.push(mkSub(i + '- ' + dl + (suf || ''), ex ? ex() : null)); return a; }
+  function opts() { return { opts: [ds, ds, ds, ds] }; }
+  var B = {
+    blank: function () { q.title = en ? 'Write the question title here:' : G('اكتبي', 'اكتب') + ' عنوان السؤال هنا :'; q.subItems = [mkSub(en ? '1- First part: __________________' : '1- الفرع الأول : __________________'), mkSub(en ? '2- Second part: __________________' : '2- الفرع الثاني : __________________')]; },
+    mcq: function () { q.title = en ? 'Choose the correct answer:' : G('اختاري', 'اختر') + ' الإجابة الصحيحة :'; q.kind = 'mcq'; q.subItems = list(3, ' ' + Q, opts); },
+    tf: function () { q.title = en ? 'Put (✓) for true and (✗) for false:' : G('ضعي', 'ضع') + ' علامة (✓) أمام العبارة الصحيحة وعلامة (✗) أمام العبارة الخاطئة :'; q.kind = 'tf'; q.subItems = list(4); },
+    fill: function () { q.title = en ? 'Fill in the blanks:' : G('أكملي', 'أكمل') + ' الفراغات الآتية :'; q.subItems = list(3); },
+    reason: function () { q.title = en ? 'Give reasons:' : G('علّلي', 'علّل') + ' ما يأتي :'; q.subItems = list(2, ' ' + Q); q.ans = { mode: 'lines', n: 2, each: true }; },
+    match: function () { q.title = en ? 'Match column 1 with column 2 by writing the letter in the bracket:' : G('ضعي', 'ضع') + ' رمز الإجابة الصحيحة من العمود الثاني في القوس المناسب :'; q.kind = 'match'; q.subItems = [1, 2, 3, 4].map(function () { return mkSub(ds, { text2: ds }); }); },
+    table: function () { q.title = en ? 'Complete the table:' : G('أكملي', 'أكمل') + ' الجدول الآتي :'; q.kind = 'table'; q.subItems = []; q.table = { rows: 4, cols: 3, head: true, cells: [en ? ['Column 1', 'Column 2', 'Column 3'] : ['العمود الأول', 'العمود الثاني', 'العمود الثالث']] }; },
+    read: function () { q.title = en ? 'Read the passage, then answer the questions:' : G('اقرئي', 'اقرأ') + ' النص الآتي ثم ' + G('أجيبي', 'أجب') + ' عمّا يليه :'; q.passage = en ? 'Type or paste the passage here...' : 'اكتب النص هنا أو الصقه...'; q.subItems = list(3, ' ' + Q); },
+    calc: function () { q.title = en ? 'Solve the following problems:' : G('حلّي', 'حلّ') + ' المسائل الآتية :'; q.subItems = list(2); q.ans = { mode: 'space', n: 3, each: true }; },
+    essay: function () { q.title = en ? 'Explain briefly:' : G('اشرحي', 'اشرح') + ' بإيجاز :'; q.subItems = list(2, ' ' + Q); q.ans = { mode: 'lines', n: 4, each: true }; }
+  };
+  (B[type] || B.blank)();
+  q.title = (en ? 'Q' + n + '/ ' : 'س ' + n + '/ ') + q.title;
+  return q;
+}
 function addQuestion() { $('qSheet').hidden = false; }
 function closeQSheet() { $('qSheet').hidden = true; }
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeQSheet(); });
 function createQuestion(type) {
   closeQSheet();
-  var L = QT[currentLang === 'en-GB' ? 'en' : 'ar'], tpl = L[type] || L.blank;
-  var q = qDefaults(); q.id = Date.now(); q.title = L.pre(questions.length + 1) + tpl.t; q.score = L.score;
-  q.subItems = tpl.subs.map(function (t) { return Object.assign(subDefaults(), { text: t }); });
-  questions.push(q); ui.openQ = q.id; showTab('questions'); structural();
+  var q = buildQuestion(type); normQ(q); questions.push(q); ui.openQ = q.id; showTab('questions'); structural();
   var el = document.querySelector('.qcard[data-id="' + q.id + '"]'); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   toast('تمت إضافة السؤال ' + questions.length);
 }
@@ -782,7 +907,7 @@ function deleteQuestion(id) {
 function moveQuestion(i, d) { var j = i + d; if (j < 0 || j >= questions.length) return; var t = questions[i]; questions[i] = questions[j]; questions[j] = t; structural(); }
 function addSubItem(qId, at, focus) {
   var q = findQ(qId); if (!q) return;
-  var s = Object.assign(subDefaults(), { text: 'فرع جديد : __________________' });
+  var k = q.kind || 'list', s = k === 'match' ? mkSub('..........', { text2: '..........' }) : k === 'mcq' ? mkSub('.......................... ؟', { opts: ['..........', '..........', '..........', '..........'] }) : mkSub(k === 'tf' ? '.......................................' : 'فرع جديد : __________________');
   if (at === undefined) at = q.subItems.length; q.subItems.splice(at, 0, s); structural();
   var ta = document.querySelector('textarea[data-t="s:' + qId + ':' + at + '"]'); if (ta) { ta.focus(); if (focus) { ta.select(); } }
 }
@@ -810,9 +935,105 @@ function handleImageUpload(ev, id) {
   rd.readAsDataURL(file);
 }
 
+/* ---------- أنواع الأسئلة: مولّدات HTML مشتركة بين الورقة وWord ---------- */
+function ctx(mode) {
+  var dir = $('examPaper').getAttribute('dir') || 'rtl', w = mode === 'word';
+  return { w: w, dir: dir, ff: w ? (dir === 'rtl' ? '"Traditional Arabic","Amiri",serif' : '"Times New Roman",Times,serif') : '', s: dir === 'rtl' ? 'right' : 'left', e: dir === 'rtl' ? 'left' : 'right', bd: w ? '1pt' : '1px', gap: w ? 'margin-top:8pt;' : '' };
+}
+function optLabels() { return currentLang === 'en-GB' ? ['a)', 'b)', 'c)', 'd)', 'e)', 'f)', 'g)', 'h)', 'i)', 'j)'] : ['أ -', 'ب -', 'ج -', 'د -', 'هـ -', 'و -', 'ز -', 'ح -', 'ط -', 'ي -']; }
+function sStyle(o, c) {
+  return 'font-size:' + (o.fontSize || '15px') + ';' + (c.ff ? 'font-family:' + c.ff + ';' : '') + 'font-weight:' + (o.bold ? 'bold' : 'normal') + ';font-style:' + (o.italic ? 'italic' : 'normal') + ';text-decoration:' + (o.underline ? 'underline' : 'none') + ';color:' + (isColor ? (o.color || '#000000') : '#000000') + ';background-color:' + (isColor ? (o.bgColor || 'transparent') : 'transparent') + ';padding:1px 4px;';
+}
+function tb(c, st) { return '<table dir="' + c.dir + '" style="direction:' + c.dir + ';width:100%;border-collapse:collapse;' + (st || '') + '">'; }
+function row2(c, main, side, wd) {
+  var w = wd || 96, wv = c.w ? Math.round(w * 0.75) + 'pt' : w + 'px';
+  return tb(c) + '<tr><td style="text-align:' + c.s + ';vertical-align:top;">' + main + '</td>' + (side ? '<td style="font-weight:bold;font-size:14px;white-space:nowrap;vertical-align:top;text-align:' + c.e + ';width:' + wv + ';' + (c.ff ? 'font-family:' + c.ff + ';' : '') + '">' + side + '</td>' : '') + '</tr></table>';
+}
+function dotLines(c, n) {
+  var r = ''; for (var i = 0; i < n; i++) r += '<tr><td style="border-bottom:' + c.bd + ' dotted #000;height:' + (c.w ? '20pt' : '26px') + ';">&nbsp;</td></tr>';
+  return tb(c, 'margin-top:2px;') + r + '</table>';
+}
+function ansHTML(q, c) {
+  var a = q.ans || {}; if (!a.mode || a.mode === 'none') return '';
+  var n = Math.max(1, Math.min(a.mode === 'lines' ? 12 : 15, +a.n || 1));
+  if (a.mode === 'lines') return dotLines(c, n);
+  return tb(c) + '<tr><td style="height:' + (c.w ? Math.round(n * 28.35) + 'pt' : n + 'cm') + ';">&nbsp;</td></tr></table>';
+}
+function eachOn(q) { var k = q.kind || 'list'; return !!(q.ans && q.ans.mode && q.ans.mode !== 'none' && q.ans.each && (k === 'list' || k === 'mcq' || k === 'tf') && q.subItems && q.subItems.length); }
+function eachAns(q, c) { return eachOn(q) ? ansHTML(q, c) : ''; }
+function tailAns(q, c) { return eachOn(q) ? '' : ansHTML(q, c); }
+
+function passageHTML(q, c) {
+  if (!q.passage || !q.passage.trim()) return '';
+  var box = 'border:' + c.bd + ' solid #000;padding:8px 12px;margin:8px 0;font-size:16px;line-height:1.7;' + (c.ff ? 'font-family:' + c.ff + ';' : '');
+  if (q.poem) {
+    var rows = q.passage.split('\n').filter(function (l) { return l.trim(); }).map(function (l) {
+      var p = l.split('*');
+      return p.length > 1 ? '<tr><td style="width:50%;text-align:center;">' + escapeHtml(p[0].trim()) + '</td><td style="width:50%;text-align:center;">' + escapeHtml(p.slice(1).join('*').trim()) + '</td></tr>' : '<tr><td colspan="2" style="text-align:center;">' + escapeHtml(l.trim()) + '</td></tr>';
+    }).join('');
+    return '<div style="' + box + '">' + tb(c, 'table-layout:fixed;') + rows + '</table></div>';
+  }
+  return '<div style="' + box + 'text-align:justify;">' + escapeHtml(q.passage).replace(/\n/g, '<br>') + '</div>';
+}
+
+function mcqHTML(q, c) {
+  var L = optLabels(), lay = q.optLayout || 'row';
+  return q.subItems.map(function (it) {
+    var opts = (it.opts || []).map(function (t, j) { return { l: L[j] || '', t: String(t || '').trim() }; }).filter(function (o) { return o.t; });
+    var head = row2(c, '<span style="' + sStyle(it, c) + '">' + escapeHtml(it.text) + '</span>', it.score ? escapeHtml(it.score) : '');
+    var optH = '';
+    if (opts.length) {
+      var cols = lay === 'row' ? opts.length : (lay === 'grid' ? 2 : 1), rows = '';
+      for (var r = 0; r < opts.length; r += cols) {
+        rows += '<tr>';
+        for (var k = 0; k < cols; k++) { var o = opts[r + k]; rows += '<td style="text-align:' + c.s + ';vertical-align:top;width:' + Math.floor(100 / cols) + '%;">' + (o ? '<span style="' + sStyle(it, c) + '">' + o.l + ' ' + escapeHtml(o.t) + '</span>' : '&nbsp;') + '</td>'; }
+        rows += '</tr>';
+      }
+      optH = tb(c, 'table-layout:fixed;width:94%;margin-' + c.s + ':18px;margin-top:2px;') + rows + '</table>';
+    }
+    return '<div style="' + c.gap + '">' + head + optH + eachAns(q, c) + '</div>';
+  }).join('');
+}
+function tfHTML(q, c) {
+  var en = currentLang === 'en-GB', circle = q.tfMode === 'circle';
+  var mark = circle ? (en ? 'True&nbsp;/&nbsp;False' : 'صح&nbsp;/&nbsp;خطأ') : '(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)';
+  return q.subItems.map(function (it) {
+    var side = mark + (it.score ? '&nbsp;&nbsp;' + escapeHtml(it.score) : '');
+    var fix = q.tfFix ? '<div style="font-size:13px;margin-top:3px;' + (c.ff ? 'font-family:' + c.ff + ';' : '') + '">' + (en ? 'Correction:' : 'التصحيح :') + '</div>' + dotLines(c, 1) : '';
+    return '<div style="' + c.gap + '">' + row2(c, '<span style="' + sStyle(it, c) + '">' + escapeHtml(it.text) + '</span>', side, circle ? 150 : 120) + fix + eachAns(q, c) + '</div>';
+  }).join('');
+}
+function matchHTML(q, c) {
+  var L = optLabels(), rows = '';
+  q.subItems.forEach(function (it, i) {
+    var a = it.text ? '<span style="' + sStyle(it, c) + '">' + (i + 1) + '- ' + escapeHtml(it.text) + '</span>' : '&nbsp;';
+    var b = it.text2 ? '<span style="' + sStyle(it, c) + '">' + (L[i] || '') + ' ' + escapeHtml(it.text2) + '</span>' : '&nbsp;';
+    var mid = q.matchMode === 'line' ? '&nbsp;' : '(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)';
+    rows += '<tr><td style="width:42%;text-align:' + c.s + ';vertical-align:top;padding:5px 0;">' + a + '</td><td style="width:16%;text-align:center;vertical-align:middle;white-space:nowrap;">' + mid + '</td><td style="width:42%;text-align:' + c.s + ';vertical-align:top;padding:5px 0;">' + b + '</td></tr>';
+  });
+  return '<div style="' + c.gap + '">' + tb(c, 'table-layout:fixed;margin-top:2px;') + rows + '</table></div>';
+}
+function tableHTML(q, c) {
+  var t = q.table || { rows: 3, cols: 3, head: true, cells: [] }, b = c.bd + ' solid #000', rows = '';
+  for (var r = 0; r < t.rows; r++) {
+    rows += '<tr>';
+    for (var k = 0; k < t.cols; k++) {
+      var v = (t.cells[r] && t.cells[r][k]) || '', head = t.head && r === 0;
+      rows += '<td style="border:' + b + ';padding:4px 6px;height:' + (c.w ? '22pt' : '30px') + ';text-align:center;vertical-align:middle;font-size:15px;' + (c.ff ? 'font-family:' + c.ff + ';' : '') + (head ? 'font-weight:bold;' + (isColor ? 'background-color:#e8ecf5;' : '') : '') + '">' + (v ? escapeHtml(v) : '&nbsp;') + '</td>';
+    }
+    rows += '</tr>';
+  }
+  return '<div style="' + c.gap + '">' + tb(c, 'table-layout:fixed;margin-top:4px;') + rows + '</table></div>';
+}
+function kindBody(q, c) {
+  var k = q.kind || 'list';
+  return k === 'mcq' ? mcqHTML(q, c) : k === 'tf' ? tfHTML(q, c) : k === 'match' ? matchHTML(q, c) : k === 'table' ? tableHTML(q, c) : '';
+}
+
 /* ---------- الأسئلة: الورقة ---------- */
 function renderPaperQuestions() {
   var box = $('paperQuestionsContainer'); if (!box) return; box.innerHTML = '';
+  var c = ctx('paper');
   questions.forEach(function (q) {
     var qDiv = document.createElement('div'); qDiv.className = 'question-block';
     var qSize = q.fontSize || '17px';
@@ -827,19 +1048,21 @@ function renderPaperQuestions() {
       var alignCss = q.imgAlign === 'right' ? 'text-align: right;' : (q.imgAlign === 'left' ? 'text-align: left;' : 'text-align: center;');
       imgH = '<div style="margin: 6px 0; ' + alignCss + '"><img src="' + escapeHtml(q.imgUrl) + '" alt="" style="width: ' + (+q.imgWidth || 150) + 'px; height: auto; display: inline-block; max-width: 100%;" /></div>';
     }
-    var subH = '';
-    if (q.subItems && q.subItems.length) {
-      subH = '<div class="subitems-list">';
-      q.subItems.forEach(function (item) {
-        var sSize = item.fontSize || '15px';
-        var sStyle = 'font-weight:' + (item.bold ? 'bold' : 'normal') + '; font-style:' + (item.italic ? 'italic' : 'normal') + '; text-decoration:' + (item.underline ? 'underline' : 'none') + '; color:' + (isColor ? (item.color || '#000000') : '#000000') + '; background-color:' + (isColor ? (item.bgColor || 'transparent') : 'transparent') + '; padding: 1px 4px;';
-        subH += '<div class="subitem-row" style="font-size: ' + sSize + ';"><span class="flex1"><span style="' + sStyle + '">' + escapeHtml(item.text) + '</span></span>' + (item.score ? '<span class="q-score">' + escapeHtml(item.score) + '</span>' : '') + '</div>';
-      });
-      subH += '</div>';
-    }
+    var kind = q.kind || 'list', subH = '';
+    if (kind === 'list') {
+      if (q.subItems && q.subItems.length) {
+        subH = '<div class="subitems-list">';
+        q.subItems.forEach(function (item) {
+          var sSize = item.fontSize || '15px';
+          var sSt = 'font-weight:' + (item.bold ? 'bold' : 'normal') + '; font-style:' + (item.italic ? 'italic' : 'normal') + '; text-decoration:' + (item.underline ? 'underline' : 'none') + '; color:' + (isColor ? (item.color || '#000000') : '#000000') + '; background-color:' + (isColor ? (item.bgColor || 'transparent') : 'transparent') + '; padding: 1px 4px;';
+          subH += '<div><div class="subitem-row" style="font-size: ' + sSize + ';"><span class="flex1"><span style="' + sSt + '">' + escapeHtml(item.text) + '</span></span>' + (item.score ? '<span class="q-score">' + escapeHtml(item.score) + '</span>' : '') + '</div>' + eachAns(q, c) + '</div>';
+        });
+        subH += '</div>';
+      }
+    } else subH = '<div class="subitems-list">' + kindBody(q, c) + '</div>';
     var pos = q.imgPos || 'afterNote';
     qDiv.innerHTML = '<div class="q-row" style="font-size: ' + qSize + ';"><span style="' + qStyle + '">' + escapeHtml(q.title) + '</span>' + (q.score ? '<span class="q-score">' + escapeHtml(q.score) + '</span>' : '') + '</div>' +
-      (pos === 'beforeNote' ? imgH : '') + noteHTML + (pos === 'afterNote' ? imgH : '') + subH + (pos === 'afterSub' ? imgH : '');
+      (pos === 'beforeNote' ? imgH : '') + noteHTML + (pos === 'afterNote' ? imgH : '') + passageHTML(q, c) + subH + tailAns(q, c) + (pos === 'afterSub' ? imgH : '');
     box.appendChild(qDiv);
   });
 }
@@ -877,7 +1100,7 @@ function setSaveState(ok) { var s = $('saveState'); s.className = 'save-state' +
 function changed() { scheduleMeasure(); clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 500); }
 function saveState() {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ v: 1, lang: currentLang, isColor: isColor, border: $('pageBorderSelect').value, shape: $('signatureShape').value, headerFields: headerFields, questions: questions }));
+    localStorage.setItem(KEY, JSON.stringify({ v: 1, lang: currentLang, g: gender, isColor: isColor, border: $('pageBorderSelect').value, shape: $('signatureShape').value, headerFields: headerFields, questions: questions }));
     setSaveState(true);
   } catch (e) { setSaveState(false); }
 }
@@ -902,10 +1125,10 @@ function loadState() {
       questions = s.questions.filter(function (q) { return q && typeof q === 'object' && q.id !== undefined && Array.isArray(q.subItems); }).map(function (q) {
         var d = qDefaults(); Object.keys(d).forEach(function (p) { if (q[p] === undefined || typeof q[p] !== typeof d[p]) q[p] = d[p]; });
         q.subItems = q.subItems.filter(function (x) { return x && typeof x === 'object'; }).map(function (x) { var sd = subDefaults(); Object.keys(sd).forEach(function (p) { if (x[p] === undefined || typeof x[p] !== typeof sd[p]) x[p] = sd[p]; }); return x; });
-        return q;
+        normQ(q); return q;
       });
     }
-    currentLang = s.lang === 'en-GB' ? 'en-GB' : 'ar-IQ'; isColor = s.isColor !== false;
+    gender = s.g === 'm' ? 'm' : 'f'; currentLang = s.lang === 'en-GB' ? 'en-GB' : 'ar-IQ'; isColor = s.isColor !== false;
     if (BORDERS.indexOf(s.border) >= 0) $('pageBorderSelect').value = s.border;
     if (['heart', 'rect', 'oval'].indexOf(s.shape) >= 0) $('signatureShape').value = s.shape;
   } catch (e) { /* تجاهل بيانات تالفة */ }
@@ -943,7 +1166,7 @@ window.addEventListener('beforeprint', function () { document.title = ' '; });
 window.addEventListener('afterprint', function () { document.title = __origTitle; });
 function getInlineCss(f) { return `font-size:${f.size}; font-weight:${f.bold ? 'bold' : 'normal'}; font-style:${f.italic ? 'italic' : 'normal'}; text-decoration:${f.underline ? 'underline' : 'none'}; color:${isColor ? f.color : '#000000'}; background-color:${isColor ? f.bgColor : 'transparent'};`; }
         function exportToWord() {
-            var paper = document.getElementById('examPaper'); var dir = paper.getAttribute('dir') || 'rtl';
+            var paper = document.getElementById('examPaper'); var dir = paper.getAttribute('dir') || 'rtl'; var cw = ctx('word');
             var fontFamily = dir === 'rtl' ? '"Traditional Arabic", "Amiri", serif' : '"Times New Roman", Times, serif';
             var borderSelect = document.getElementById('pageBorderSelect').value;
             var borderStyle = 'border: 2.5pt solid #000000;';
@@ -957,13 +1180,14 @@ function getInlineCss(f) { return `font-size:${f.size}; font-weight:${f.bold ? '
                 var qSize = q.fontSize || '17px';
                 var qCss = `font-family:${fontFamily}; font-size:${qSize}; font-weight:${q.bold ? 'bold' : 'normal'}; font-style:${q.italic ? 'italic' : 'normal'}; text-decoration:${q.underline ? 'underline' : 'none'}; color:${isColor ? (q.color || '#000000') : '#000000'}; background-color:${isColor ? (q.bgColor || 'transparent') : 'transparent'}; padding:1pt 4pt;`;
                 var subsHtml = '';
-                if (q.subItems && q.subItems.length > 0) {
+                if ((q.kind || 'list') === 'list' && q.subItems && q.subItems.length > 0) {
                     q.subItems.forEach(function(sub) {
                         var subSize = sub.fontSize || '15px';
                         var sCss = `font-family:${fontFamily}; font-size:${subSize}; font-weight:${sub.bold ? 'bold' : 'normal'}; font-style:${sub.italic ? 'italic' : 'normal'}; text-decoration:${sub.underline ? 'underline' : 'none'}; color:${isColor ? (sub.color || '#000000') : '#000000'}; background-color:${isColor ? (sub.bgColor || 'transparent') : 'transparent'}; padding:1pt 3pt;`;
-                        subsHtml += '<table style="width:100%; border-collapse:collapse; margin-top:8pt;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + sCss + '">' + escapeHtml(sub.text) + '</span></td>' + (sub.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escapeHtml(sub.score) + '</td>' : '') + '</tr></table>';
+                        subsHtml += '<table style="width:100%; border-collapse:collapse; margin-top:8pt;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + sCss + '">' + escapeHtml(sub.text) + '</span></td>' + (sub.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escapeHtml(sub.score) + '</td>' : '') + '</tr></table>' + eachAns(q, cw);
                     });
                 }
+                if ((q.kind || 'list') !== 'list') subsHtml = kindBody(q, cw);
                 var noteCss = `font-family:${fontFamily}; font-size:13px; font-weight:${q.noteBold ? 'bold' : 'normal'}; font-style:${q.noteItalic ? 'italic' : 'normal'}; text-decoration:${q.noteUnderline ? 'underline' : 'none'}; color:${isColor ? (q.noteColor || '#000000') : '#000000'}; background-color:${isColor ? (q.noteBgColor || 'transparent') : 'transparent'}; padding:1pt 5pt;`;
                 var imgHtmlWord = '';
                 if (q.imgUrl) {
@@ -971,7 +1195,7 @@ function getInlineCss(f) { return `font-size:${f.size}; font-weight:${f.bold ? '
                     imgHtmlWord = '<div style="text-align:' + alignWord + '; margin:4pt 0;"><img src="' + q.imgUrl + '" width="' + (q.imgWidth || 150) + '" style="width:' + (q.imgWidth || 150) + 'pt; height:auto;" /></div>';
                 }
                 var pos = q.imgPos || 'afterNote';
-                questionsHtml += '<div style="' + borderBottom + '"><table style="width:100%; border-collapse:collapse;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + qCss + '">' + escapeHtml(q.title) + '</span></td>' + (q.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escapeHtml(q.score) + '</td>' : '') + '</tr></table>' + (pos === 'beforeNote' ? imgHtmlWord : '') + (q.note ? '<div style="text-align:center; margin:4pt 0;"><span style="' + noteCss + '">' + escapeHtml(q.note) + '</span></div>' : '') + (pos === 'afterNote' ? imgHtmlWord : '') + subsHtml + (pos === 'afterSub' ? imgHtmlWord : '') + '</div>';
+                questionsHtml += '<div style="' + borderBottom + '"><table style="width:100%; border-collapse:collapse;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + qCss + '">' + escapeHtml(q.title) + '</span></td>' + (q.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escapeHtml(q.score) + '</td>' : '') + '</tr></table>' + (pos === 'beforeNote' ? imgHtmlWord : '') + (q.note ? '<div style="text-align:center; margin:4pt 0;"><span style="' + noteCss + '">' + escapeHtml(q.note) + '</span></div>' : '') + (pos === 'afterNote' ? imgHtmlWord : '') + passageHTML(q, cw) + subsHtml + tailAns(q, cw) + (pos === 'afterSub' ? imgHtmlWord : '') + '</div>';
             });
             var noteVisible = headerFields.Note.text.trim() !== "";
             var footerVisible = headerFields.Teacher.text.trim() !== "" || headerFields.FooterLabel.text.trim() !== "" || headerFields.FooterName.text.trim() !== "";
@@ -991,7 +1215,7 @@ function installApp() { if (!deferredInstall) return; deferredInstall.prompt(); 
 
 /* ---------- التشغيل ---------- */
 (function init() {
-  loadState();
+  loadState(); questions.forEach(normQ); renderSheet();
   ui.openQ = questions.length ? questions[0].id : null;
   applyLangToPaper(); updatePageBorder();
   $('examPaper').classList.toggle('bw-mode', !isColor);
