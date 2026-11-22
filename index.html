@@ -199,8 +199,10 @@ select.in{padding-block:0;height:40px}
 .paper-note-wrap{text-align:center;margin:10px 0}
 .paper-note{display:inline-block;font-size:16px;line-height:24px;letter-spacing:.025em;border:1px solid #000}
 .highlight-cyan{background-color:#00ffff;color:#000;padding:2px 12px;font-weight:700}
-#paperQuestionsContainer{font-size:16px;line-height:24px}
-#paperQuestionsContainer>*+*{margin-top:10px}
+#paperQuestionsContainer,.pq{font-size:16px;line-height:24px}
+.pq>*+*{margin-top:10px}
+.a4-page.measuring{max-height:none!important;height:auto!important;overflow:visible!important}
+.pg-num{position:absolute;bottom:3.5mm;left:0;right:0;text-align:center;font-size:12px;font-weight:bold;line-height:1;pointer-events:none}
 .question-block{border-bottom:1px solid #000;padding-top:9px;padding-bottom:10px}
 .question-block:first-child{padding-top:4px}
 .question-block:last-child{border-bottom:none;padding-bottom:2px}
@@ -288,12 +290,13 @@ select.in{padding-block:0;height:40px}
 /* ============ الطباعة ============ */
 @page{size:A4 portrait;margin:0}
 @media print{
-  html,body{width:210mm!important;height:296mm!important;max-height:296mm!important;background:#fff!important;margin:0!important;padding:0!important;overflow:hidden!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{width:210mm!important;height:auto!important;max-height:none!important;background:#fff!important;margin:0!important;padding:0!important;overflow:visible!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .no-print,.toast,.sheet-bg{display:none!important}
   .app{display:block!important;height:auto!important}
-  .preview,.stage{display:block!important;padding:0!important;margin:0!important;background:#fff!important;overflow:visible!important;width:210mm!important;height:296mm!important}
-  .scaler{position:static!important;width:210mm!important;height:296mm!important;margin:0!important}
-  .a4-page{position:static!important;transform:none!important;width:210mm!important;height:296mm!important;min-height:0!important;max-height:296mm!important;box-shadow:none!important;margin:0!important;padding:12mm 14mm!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:avoid!important;page-break-after:avoid!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .preview,.stage{display:block!important;padding:0!important;margin:0!important;background:#fff!important;overflow:visible!important;width:210mm!important;height:auto!important}
+  .scaler{position:static!important;width:210mm!important;height:auto!important;margin:0!important}
+  .a4-page{position:relative!important;top:0!important;left:0!important;transform:none!important;width:210mm!important;height:296mm!important;min-height:0!important;max-height:296mm!important;box-shadow:none!important;margin:0!important;padding:12mm 14mm!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:page!important;page-break-after:always!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .scaler>.a4-page:last-child{break-after:auto!important;page-break-after:auto!important}
 }
 </style>
 </head>
@@ -364,6 +367,7 @@ select.in{padding-block:0;height:40px}
         </div>
         <div id="questionsList"></div>
         <button type="button" class="btn btn-dashed" onclick="addQuestion()"><svg class="ic"><use href="#i-plus"/></svg>إضافة سؤال</button>
+        <button type="button" class="btn btn-dashed" style="margin-top:8px" onclick="openTpl()">▤ نماذج جاهزة للمواد (عربي، رياضيات، علوم، إنجليزي…)</button>
       </div>
 
       <div class="tabpane" id="pane-footer" hidden>
@@ -395,6 +399,11 @@ select.in{padding-block:0;height:40px}
             <button type="button" data-g="m" onclick="setGender('m')">مذكر (اكتب)</button>
           </div>
           <p class="hint">تُستعمل في عناوين الأسئلة الجاهزة عند إضافتها.</p>
+        </section>
+        <section class="card">
+          <h3 class="card-t">الصفحات</h3>
+          <label class="chk" style="margin:0"><input type="checkbox" id="pgNumChk" checked onchange="setPageNums(this.checked)"> ترقيم الصفحات (يظهر عند وجود أكثر من صفحة)</label>
+          <p class="hint">إذا زادت الأسئلة عن صفحة واحدة تنتقل تلقائياً إلى صفحة جديدة، ويبقى التوقيع في آخر صفحة.</p>
         </section>
         <section class="card">
           <h3 class="card-t">إطار الصفحة</h3>
@@ -457,7 +466,7 @@ select.in{padding-block:0;height:40px}
             </div>
             <div id="paperInfo"></div>
             <div id="paperNoteContainer" class="paper-note-wrap"><span id="paperNote" class="highlight-cyan paper-note">ملاحظة</span></div>
-            <div id="paperQuestionsContainer"></div>
+            <div id="paperQuestionsContainer" class="pq"></div>
           </div>
           <div id="paperFooterDiv" class="signature-container">
             <div class="fw4"></div>
@@ -478,6 +487,13 @@ select.in{padding-block:0;height:40px}
   <div class="sheet" role="dialog" aria-modal="true" aria-label="اختيار نوع السؤال">
     <div class="sheet-h"><h3>ما نوع السؤال الجديد؟</h3><button type="button" class="icon-btn" onclick="closeQSheet()" aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div id="sheetList"></div>
+  </div>
+</div>
+<div class="sheet-bg no-print" id="tplSheet" hidden onclick="if(event.target===this)closeTpl()">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="نماذج المواد">
+    <div class="sheet-h"><h3>اختر نموذج المادة</h3><button type="button" class="icon-btn" onclick="closeTpl()" aria-label="إغلاق"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <p class="hint" style="margin:0 4px 10px">يملأ الأسئلة بأمثلة جاهزة لتعدّلها، ويضبط اسم المادة.</p>
+    <div id="tplList"></div>
   </div>
 </div>
 <div class="sheet-bg no-print" id="bulkSheet" hidden onclick="if(event.target===this)closeBulk()">
@@ -728,6 +744,8 @@ function switchLang(lang) {
   if (!confirm('سيتم استبدال نصوص الترويسة والتذييل بالقالب الجاهز للغة المختارة (الأسئلة لن تتغيّر). هل تريد المتابعة؟')) return;
   if (lang === 'en-GB') setEnglishPreset(); else setArabicPreset();
 }
+var pageNums = true;
+function setPageNums(on) { pageNums = !!on; changed(); }
 var BORDERS = ['page-border-pdf-exact', 'page-border-simple', 'page-border-double', 'page-border-dashed', 'page-border-ornate', 'page-border-none'];
 function updatePageBorder() {
   var paper = $('examPaper'); BORDERS.forEach(function (b) { paper.classList.remove(b); });
@@ -742,6 +760,7 @@ function setColorMode(on) {
 function syncControls() {
   document.querySelectorAll('#langSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === currentLang); });
   document.querySelectorAll('#genderSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.g === gender); });
+  var pc = $('pgNumChk'); if (pc) pc.checked = pageNums;
   var bv = $('pageBorderSelect').value; document.querySelectorAll('#borderGrid .bopt').forEach(function (b) { b.classList.toggle('on', b.dataset.b === bv); });
   var sv = $('signatureShape').value; document.querySelectorAll('#shapeSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.shape === sv); });
   document.querySelectorAll('#colorSeg button').forEach(function (b) { b.classList.toggle('on', (b.dataset.color === '1') === isColor); });
@@ -1011,6 +1030,87 @@ function buildQuestion(type) {
   q.title = (en ? 'Q' + n + '/ ' : 'س ' + n + '/ ') + q.title;
   return q;
 }
+/* ---------- نماذج جاهزة للمواد ---------- */
+function T(type, title, o) { return Object.assign({ type: type, title: title }, o || {}); }
+var TPLS = [
+  { id: 'ar', name: 'اللغة العربية', icon: 'ع', desc: 'قراءة ونحو وإملاء وتعبير', subject: 'اللغة العربية', lang: 'ar', qs: [
+    T('read', 'اقرأ النص الآتي ثم أجب عمّا يليه :', { score: '(10 د)', passage: 'اكتب النص هنا أو الصقه...', items: ['ما الفكرة العامة للنص ؟', 'استخرج من النص كلمة تدل على ...... .', 'ما معنى كلمة (......) ؟', 'ما رأيك بما ورد في النص ؟'] }),
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(5 د)', mcq: [['الفاعل في جملة (كتب الطالب الدرس) هو :', ['الطالب', 'الدرس', 'كتب', 'الجملة']], ['جمع كلمة (كتاب) هو :', ['كتب', 'كتّاب', 'أكتاب', 'كاتبون']], ['الفعل (يذهب) فعل :', ['مضارع', 'ماضٍ', 'أمر', 'جامد']]] }),
+    T('fill', 'أكمل الفراغات الآتية :', { score: '(5 د)', items: ['المبتدأ والخبر يكونان مرفوعين، فالمبتدأ ...... والخبر ...... .', 'علامة نصب الاسم المثنى ...... .'] }),
+    T('match', 'صل بين العمود الأول والثاني :', { score: '(5 د)', pairs: [['الفاعل', 'مرفوع'], ['المفعول به', 'منصوب'], ['المضاف إليه', 'مجرور']] }),
+    T('essay', 'عبّر بأسلوبك عن أحد الموضوعين الآتيين :', { score: '(10 د)', items: ['أهمية العلم في حياتنا', 'الوطن'], lines: 6 })
+  ] },
+  { id: 'math', name: 'الرياضيات', icon: '∑', desc: 'اختيار ومسائل بفراغ للحل وجدول', subject: 'الرياضيات', lang: 'ar', qs: [
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(8 د)', mcq: [['ناتج 3 × 4 + 2 =', ['14', '18', '12', '24']], ['قيمة √49 =', ['7', '5', '9', '49']], ['مجموع زوايا المثلث =', ['180°', '90°', '360°', '270°']], ['الكسر ½ يساوي :', ['0.5', '0.2', '2', '1.5']]] }),
+    T('tf', 'ضع علامة (✓) أمام العبارة الصحيحة و(✗) أمام الخاطئة :', { score: '(6 د)', items: ['العدد 15 عدد أولي.', 'المربع له أربعة أضلاع متساوية.', 'ناتج 2³ = 6'] }),
+    T('table', 'أكمل الجدول الآتي :', { score: '(6 د)', table: [['س', '1', '2', '3', '4'], ['ص = 2س + 1', '', '', '', '']] }),
+    T('calc', 'حلّ المسائل الآتية :', { score: '(10 د)', items: ['1- اشترى أحمد 3 دفاتر بسعر 750 ديناراً للدفتر الواحد. كم دفعَ جميعاً ؟', '2- أوجد قيمة س : 2س + 5 = 17', '3- أوجد مساحة مستطيل طوله 8 سم وعرضه 5 سم.'], ans: { mode: 'space', n: 4, each: true } })
+  ] },
+  { id: 'sci', name: 'العلوم', icon: '⚗', desc: 'اختيار وصح/خطأ وعلّل ومطابقة', subject: 'العلوم', lang: 'ar', qs: [
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(6 د)', mcq: [['الغاز الذي تحتاجه النباتات في البناء الضوئي :', ['ثاني أكسيد الكربون', 'الأكسجين', 'النيتروجين', 'الهيدروجين']], ['وحدة قياس القوة :', ['نيوتن', 'جول', 'واط', 'متر']], ['الرمز الكيميائي للماء :', ['H₂O', 'CO₂', 'O₂', 'NaCl']]] }),
+    T('tf', 'ضع (✓) أو (✗) وصحّح الخطأ إن وجد :', { score: '(6 د)', items: ['القلب يضخ الدم إلى أجزاء الجسم.', 'تتكون الرياح بسبب اختلاف الضغط الجوي.'], fix: true }),
+    T('reason', 'علّل ما يأتي :', { score: '(6 د)', items: ['1- يطفو الخشب على سطح الماء.', '2- يُفضَّل ارتداء الملابس الفاتحة صيفاً.'], ans: { mode: 'lines', n: 2, each: true } }),
+    T('match', 'صل بين العضو ووظيفته :', { score: '(6 د)', pairs: [['الرئتان', 'تبادل الغازات'], ['المعدة', 'هضم الطعام'], ['الكلية', 'تنقية الدم']] })
+  ] },
+  { id: 'en', name: 'English', icon: 'En', desc: 'Reading, grammar, vocabulary, writing', subject: 'English', lang: 'en', qs: [
+    T('read', 'Read the passage, then answer the questions:', { score: '(10 marks)', passage: 'Type or paste the passage here...', items: ['1- What is the passage about ?', '2- Find a word in the passage that means "......" .', '3- Why did the writer say that ......  ?'] }),
+    T('mcq', 'Choose the correct answer:', { score: '(5 marks)', mcq: [['She ...... to school every day.', ['goes', 'go', 'going', 'gone']], ['They ...... playing football now.', ['are', 'is', 'was', 'be']], ['The opposite of "big" is :', ['small', 'tall', 'long', 'wide']]] }),
+    T('fill', 'Fill in the blanks with suitable words:', { score: '(5 marks)', items: ['1- My brother ...... (play) tennis on Fridays.', '2- I have ...... apple and ...... orange.'] }),
+    T('match', 'Match words in column A with their meanings in column B:', { score: '(5 marks)', pairs: [['Huge', 'Very big'], ['Quick', 'Fast'], ['Tiny', 'Very small']] }),
+    T('essay', 'Write a short paragraph (5-6 lines) about:', { score: '(5 marks)', items: ['Your favourite hobby.'], lines: 6 })
+  ] },
+  { id: 'islam', name: 'التربية الإسلامية', icon: '☪', desc: 'اختيار وصح/خطأ وأكمل واذكر', subject: 'التربية الإسلامية', lang: 'ar', qs: [
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(6 د)', mcq: [['عدد أركان الإسلام :', ['خمسة', 'أربعة', 'ستة', 'سبعة']], ['أول من أسلم من الصبيان :', ['علي بن أبي طالب', 'الزبير', 'سعد', 'طلحة']], ['السورة التي تُقرأ في كل ركعة :', ['الفاتحة', 'الإخلاص', 'الناس', 'الكوثر']]] }),
+    T('tf', 'ضع (✓) أو (✗) :', { score: '(5 د)', items: ['الصوم ركن من أركان الإسلام.', 'يجوز الكذب في المزاح.'] }),
+    T('fill', 'أكمل الفراغات :', { score: '(5 د)', items: ['قال تعالى: ﴿...... رَبِّ الْعَالَمِينَ﴾', 'عدد الصلوات المفروضة ...... صلوات في اليوم والليلة.'] }),
+    T('essay', 'اذكر ما يأتي :', { score: '(6 د)', items: ['1- ثلاثة من آداب الطعام.', '2- شروط الوضوء.'], lines: 3, each: true })
+  ] },
+  { id: 'soc', name: 'الاجتماعيات', icon: '🌍', desc: 'تاريخ وجغرافية: اختيار ومطابقة وعلّل', subject: 'الاجتماعيات', lang: 'ar', qs: [
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(6 د)', mcq: [['عاصمة العراق :', ['بغداد', 'البصرة', 'الموصل', 'أربيل']], ['نهر دجلة والفرات يلتقيان في :', ['القرنة', 'سامراء', 'كربلاء', 'الرمادي']], ['أكبر قارات العالم :', ['آسيا', 'أفريقيا', 'أوروبا', 'أستراليا']]] }),
+    T('match', 'صل بين المدينة والمحافظة التي تتبعها :', { score: '(6 د)', pairs: [['الزبير', 'البصرة'], ['سامراء', 'صلاح الدين'], ['الحلة', 'بابل']] }),
+    T('reason', 'علّل ما يأتي :', { score: '(6 د)', items: ['1- قيام الحضارات القديمة على ضفاف الأنهار.', '2- ارتفاع درجات الحرارة صيفاً في جنوب العراق.'], ans: { mode: 'lines', n: 2, each: true } }),
+    T('essay', 'اكتب نبذة عن :', { score: '(6 د)', items: ['أهمية الزراعة في بلدنا.'], lines: 5 })
+  ] },
+  { id: 'cs', name: 'الحاسوب', icon: '💻', desc: 'مفاهيم وصح/خطأ وجدول وتعريفات', subject: 'الحاسوب', lang: 'ar', qs: [
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(6 د)', mcq: [['وحدة الإدخال من الآتي :', ['لوحة المفاتيح', 'الشاشة', 'الطابعة', 'السماعة']], ['الامتداد الخاص بملفات Word :', ['.docx', '.xlsx', '.pptx', '.jpg']], ['برنامج جداول البيانات :', ['Excel', 'Word', 'Paint', 'Notepad']]] }),
+    T('tf', 'ضع (✓) أو (✗) :', { score: '(5 د)', items: ['الذاكرة RAM ذاكرة دائمة.', 'يمكن حفظ الملفات في وحدة تخزين خارجية.'] }),
+    T('table', 'أكمل الجدول بتصنيف الأجهزة :', { score: '(6 د)', table: [['وحدات الإدخال', 'وحدات الإخراج', 'وحدات التخزين'], ['', '', ''], ['', '', '']] }),
+    T('essay', 'عرّف ما يأتي :', { score: '(6 د)', items: ['1- نظام التشغيل.', '2- الشبكة.'], lines: 2, each: true })
+  ] },
+  { id: 'gen', name: 'نموذج عام', icon: '≡', desc: 'مزيج من كل الأنواع لأي مادة', subject: '', lang: '', qs: [
+    T('mcq', 'اختر الإجابة الصحيحة :', { score: '(5 د)', mcq: [['السؤال الأول ......', ['الخيار الأول', 'الخيار الثاني', 'الخيار الثالث', 'الخيار الرابع']], ['السؤال الثاني ......', ['الخيار الأول', 'الخيار الثاني', 'الخيار الثالث', 'الخيار الرابع']]] }),
+    T('tf', 'ضع (✓) أو (✗) :', { score: '(5 د)', items: ['العبارة الأولى ......', 'العبارة الثانية ......'] }),
+    T('fill', 'أكمل الفراغات :', { score: '(5 د)', items: ['1- ......', '2- ......'] }),
+    T('reason', 'علّل :', { score: '(5 د)', items: ['1- ......'], ans: { mode: 'lines', n: 2, each: true } })
+  ] }
+];
+function renderTpl() {
+  $('tplList').innerHTML = TPLS.map(function (t) { return '<button type="button" class="opt" onclick="applyTpl(\'' + t.id + '\')"><span class="oi">' + t.icon + '</span><span><b>' + t.name + '</b><small>' + t.desc + ' · ' + t.qs.length + ' أسئلة</small></span></button>'; }).join('');
+}
+function openTpl() { renderTpl(); $('tplSheet').hidden = false; }
+function closeTpl() { $('tplSheet').hidden = true; }
+function applyTpl(id) {
+  var t = TPLS.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+  if (questions.length && !confirm('سيتم استبدال الأسئلة الحالية بنموذج «' + t.name + '». هل تريد المتابعة؟')) return;
+  if (t.lang === 'en' && currentLang !== 'en-GB') setEnglishPreset(); else if (t.lang === 'ar' && currentLang !== 'ar-IQ') setArabicPreset();
+  var en = currentLang === 'en-GB', base = Date.now();
+  questions = t.qs.map(function (d, i) {
+    var q = buildQuestion(d.type); q.id = base + i; q.title = (en ? 'Q' + (i + 1) + '/ ' : 'س ' + (i + 1) + '/ ') + d.title; q.score = d.score || '';
+    var k = q.kind || 'list';
+    if (d.passage) q.passage = d.passage;
+    if (d.mcq) q.subItems = d.mcq.map(function (m, j) { return mkSub((j + 1) + '- ' + m[0], { opts: m[1].slice(0, 4) }); });
+    else if (d.pairs) q.subItems = d.pairs.map(function (p) { return mkSub(p[0], { text2: p[1] }); });
+    else if (d.table) { q.table = { rows: d.table.length, cols: d.table[0].length, head: true, cells: d.table }; q.subItems = []; }
+    else if (d.items) q.subItems = d.items.map(function (x) { return mkSub(x); });
+    if (d.ans) q.ans = d.ans; else if (d.lines) q.ans = { mode: 'lines', n: d.lines, each: d.each !== false && d.items && d.items.length > 1 };
+    if (d.fix) q.tfFix = true;
+    normQ(q); return q;
+  });
+  if (t.subject) headerFields.Subject.text = t.subject;
+  ui.openQ = null; showTab('questions'); renderAll(); closeTpl(); toast('تم تحميل نموذج ' + t.name + ' — عدّله كما تشاء');
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTpl(); });
+
 function addQuestion() { $('qSheet').hidden = false; }
 function closeQSheet() { $('qSheet').hidden = true; }
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeQSheet(); closeBulk(); } });
@@ -1155,7 +1255,7 @@ function kindBody(q, c) {
 
 /* ---------- الأسئلة: الورقة ---------- */
 function renderPaperQuestions() {
-  var box = $('paperQuestionsContainer'); if (!box) return; box.innerHTML = '';
+  var box = $('paperQuestionsContainer'); if (!box) return; unpaginate(); box.innerHTML = '';
   var c = ctx('paper');
   questions.forEach(function (q) {
     var qDiv = document.createElement('div'); qDiv.className = 'question-block';
@@ -1193,28 +1293,69 @@ function renderPaperQuestions() {
 /* ---------- العرض: ملاءمة الحجم + مؤشر امتلاء الصفحة ---------- */
 var PW = 793.7, PH = 1122.5;
 function fit() {
-  var stage = $('stage'), paper = $('examPaper'), scaler = $('scaler'); if (!stage.clientWidth) return;
+  var stage = $('stage'), scaler = $('scaler'); if (!stage.clientWidth) return;
   var cs = getComputedStyle(stage), avail = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-  var s = ui.zoom === 'fit' ? Math.min(1.15, avail / PW) : ui.zoom;
-  s = Math.max(0.3, Math.min(1.8, s)); ui.scale = s;
-  scaler.style.width = (PW * s) + 'px'; scaler.style.height = (PH * s) + 'px';
-  paper.style.transform = 'scale(' + s + ')';
-  $('zoomTxt').textContent = Math.round(s * 100) + '%';
+  var sc = ui.zoom === 'fit' ? Math.min(1.15, avail / PW) : ui.zoom;
+  sc = Math.max(0.3, Math.min(1.8, sc)); ui.scale = sc;
+  var pages = scaler.querySelectorAll('.a4-page'), GAP = 24;
+  pages.forEach(function (pg, i) { pg.style.top = (i * (PH + GAP) * sc) + 'px'; pg.style.transform = 'scale(' + sc + ')'; });
+  scaler.style.width = (PW * sc) + 'px'; scaler.style.height = ((pages.length * PH + (pages.length - 1) * GAP) * sc) + 'px';
+  $('zoomTxt').textContent = Math.round(sc * 100) + '%';
 }
 function zoomBy(d) { ui.zoom = Math.max(0.3, Math.min(1.8, Math.round((ui.scale + d) * 100) / 100)); fit(); }
 function zoomFit() { ui.zoom = 'fit'; fit(); }
 var measureQueued = false;
 function scheduleMeasure() { if (measureQueued) return; measureQueued = true; requestAnimationFrame(function () { measureQueued = false; measure(); }); }
+/* تقسيم الأسئلة على صفحات A4: لا يُقطع السؤال الواحد بين صفحتين، والتوقيع في آخر صفحة */
+function unpaginate() {
+  var box = $('paperQuestionsContainer'), p = $('examPaper'), ft = $('paperFooterDiv');
+  if (ft.parentNode !== p) p.appendChild(ft);
+  document.querySelectorAll('.pg-extra').forEach(function (pg) { pg.querySelectorAll('.question-block').forEach(function (b) { box.appendChild(b); }); pg.remove(); });
+  document.querySelectorAll('.pg-num').forEach(function (n) { n.remove(); });
+}
+function paginate() {
+  unpaginate();
+  var p = $('examPaper'), scaler = $('scaler'), box = $('paperQuestionsContainer'), ft = $('paperFooterDiv');
+  p.classList.add('measuring');
+  var cs = getComputedStyle(p), pt = parseFloat(cs.paddingTop) || 0, pb = parseFloat(cs.paddingBottom) || 0, bw = p.clientTop || 0;
+  var H = 1118.5, limit = H - 2 * bw - pb, footOn = ft.style.display !== 'none', foot = footOn ? ft.offsetHeight + 6 : 0;
+  var blocks = Array.prototype.slice.call(box.children), pages = [{ b: [], shift: 0, end: 0 }], tooBig = false;
+  blocks.forEach(function (b) {
+    var top = b.offsetTop, bot = top + b.offsetHeight, cur = pages[pages.length - 1];
+    if (cur.b.length && bot - cur.shift > limit) { cur = { b: [], shift: top - pt, end: 0 }; pages.push(cur); }
+    cur.b.push(b); cur.end = bot - cur.shift; if (cur.end > limit) tooBig = true;
+  });
+  var last = pages[pages.length - 1];
+  if (!blocks.length) last.end = ft.offsetTop - 0 > 0 ? pt + 40 : pt;
+  if (footOn && last.end + foot > limit) {
+    if (last.b.length > 1) { var mv = last.b.pop(); last.end = last.b[last.b.length - 1].offsetTop + last.b[last.b.length - 1].offsetHeight - last.shift; pages.push({ b: [mv], shift: mv.offsetTop - pt, end: mv.offsetTop + mv.offsetHeight - (mv.offsetTop - pt) }); }
+    else pages.push({ b: [], shift: 0, end: pt });
+    last = pages[pages.length - 1];
+  }
+  var lastUsed = last.end + foot;
+  p.classList.remove('measuring');
+  if (pages.length > 1) {
+    var cls = p.className, L = currentLang === 'en-GB';
+    pages.forEach(function (pg, i) {
+      var host = p;
+      if (i > 0) {
+        host = document.createElement('div'); host.className = cls + ' pg-extra'; host.dir = p.dir;
+        host.innerHTML = '<div class="paper-content-area"><div class="pq"></div></div>';
+        var pq = host.querySelector('.pq'); pg.b.forEach(function (b) { pq.appendChild(b); });
+        scaler.appendChild(host);
+      }
+      if (pageNums) { var n = document.createElement('div'); n.className = 'pg-num'; n.textContent = L ? 'Page ' + (i + 1) + ' of ' + pages.length : 'صفحة ' + (i + 1) + ' من ' + pages.length; host.appendChild(n); }
+    });
+    scaler.lastElementChild.appendChild(ft);
+  }
+  return { pages: pages.length, pct: Math.max(0, Math.round((lastUsed - pt) / (limit - pt) * 100)), tooBig: tooBig };
+}
 function measure() {
-  var p = $('examPaper'), cs = getComputedStyle(p); if (!p.clientHeight) return;
-  var pt = parseFloat(cs.paddingTop) || 0, pb = parseFloat(cs.paddingBottom) || 0;
-  var footVisible = $('paperFooterDiv').style.display !== 'none';
-  var last = footVisible ? $('paperFooterDiv') : p.querySelector('.paper-content-area');
-  var used = last.offsetTop + last.offsetHeight - pt, avail = p.clientHeight - pt - pb;
-  var pct = Math.max(0, Math.round(used / avail * 100)); ui.pct = pct;
-  var m = $('meter'); m.dataset.s = pct > 100 ? 'over' : (pct >= 98 ? 'tight' : 'ok');
-  $('meterFill').style.width = Math.min(100, pct) + '%';
-  $('meterTxt').textContent = pct > 100 ? 'يتجاوز الصفحة (' + pct + '%)' : (pct >= 98 ? 'الصفحة شبه ممتلئة (' + pct + '%)' : 'يملأ ' + pct + '% من الصفحة');
+  var p = $('examPaper'); if (!p.clientHeight && !p.offsetHeight) return;
+  var r = paginate(); ui.pct = r.pct; ui.pages = r.pages; fit();
+  var m = $('meter'); m.dataset.s = r.tooBig ? 'over' : (r.pct >= 98 && r.pages === 1 ? 'tight' : 'ok');
+  $('meterFill').style.width = Math.min(100, r.pct) + '%';
+  $('meterTxt').textContent = r.tooBig ? 'سؤال أطول من صفحة — قلّل محتواه' : r.pages > 1 ? r.pages + ' صفحات · آخر صفحة ' + Math.min(r.pct, 100) + '%' : (r.pct >= 98 ? 'الصفحة شبه ممتلئة (' + r.pct + '%)' : 'يملأ ' + r.pct + '% من الصفحة');
 }
 
 /* ---------- الحفظ التلقائي ---------- */
@@ -1223,7 +1364,7 @@ function setSaveState(ok) { var s = $('saveState'); s.className = 'save-state' +
 function changed() { scheduleMeasure(); clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 500); }
 function saveState() {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ v: 1, lang: currentLang, g: gender, info: info, isColor: isColor, border: $('pageBorderSelect').value, shape: $('signatureShape').value, headerFields: headerFields, questions: questions }));
+    localStorage.setItem(KEY, JSON.stringify({ v: 1, lang: currentLang, g: gender, pn: pageNums, info: info, isColor: isColor, border: $('pageBorderSelect').value, shape: $('signatureShape').value, headerFields: headerFields, questions: questions }));
     setSaveState(true);
   } catch (e) { setSaveState(false); }
 }
@@ -1252,7 +1393,7 @@ function loadState() {
       });
     }
     if (s.info && typeof s.info === 'object') { info.on = !!s.info.on; INFO_K.forEach(function (k) { var v = s.info[k]; if (v && typeof v === 'object') { info[k].on = !!v.on; info[k].val = typeof v.val === 'string' ? v.val.slice(0, 40) : ''; } }); }
-    gender = s.g === 'm' ? 'm' : 'f'; currentLang = s.lang === 'en-GB' ? 'en-GB' : 'ar-IQ'; isColor = s.isColor !== false;
+    pageNums = s.pn !== false; gender = s.g === 'm' ? 'm' : 'f'; currentLang = s.lang === 'en-GB' ? 'en-GB' : 'ar-IQ'; isColor = s.isColor !== false;
     if (BORDERS.indexOf(s.border) >= 0) $('pageBorderSelect').value = s.border;
     if (['heart', 'rect', 'oval'].indexOf(s.shape) >= 0) $('signatureShape').value = s.shape;
   } catch (e) { /* تجاهل بيانات تالفة */ }
