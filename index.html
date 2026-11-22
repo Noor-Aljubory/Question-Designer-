@@ -1358,7 +1358,7 @@ function paginate() {
 }
 function measure() {
   var p = $('examPaper'); if (!p.clientHeight && !p.offsetHeight) return;
-  var r = paginate(); ui.pct = r.pct; ui.pages = r.pages; fit();
+  var r = paginate(); ui.pct = r.pct; ui.pages = r.pages; ui.tooBig = r.tooBig; fit();
   var m = $('meter'); m.dataset.s = r.tooBig ? 'over' : (r.pct >= 98 && r.pages === 1 ? 'tight' : 'ok');
   $('meterFill').style.width = Math.min(100, r.pct) + '%';
   $('meterTxt').textContent = r.tooBig ? 'سؤال أطول من صفحة — قلّل محتواه' : r.pages > 1 ? r.pages + ' صفحات · آخر صفحة ' + Math.min(r.pct, 100) + '%' : (r.pct >= 98 ? 'الصفحة شبه ممتلئة (' + r.pct + '%)' : 'يملأ ' + r.pct + '% من الصفحة');
@@ -1428,8 +1428,11 @@ function renderAll() { renderHeaderEditor(); renderQuestionsEditor(); updatePape
 
 /* ---------- التصدير ---------- */
 function exportToPDF() {
-  measure();
-  if (ui.pct > 100 && !confirm('محتوى الورقة يتجاوز صفحة A4 واحدة، وسيُقصّ الجزء الزائد عند الطباعة. هل تريد المتابعة؟')) return;
+  /* على الشاشات الصغيرة تكون المعاينة مخفية أثناء التحرير، فلا يمكن قياس الأسئلة وتقسيمها على الصفحات
+     (كانت الطباعة تخرج ورقة واحدة مقصوصة). نُظهر المعاينة أولاً ثم نقيس. */
+  if (!$('examPaper').offsetHeight) setPane('preview');
+  fit(); measure();
+  if ((ui.tooBig || ui.pct > 100) && !confirm('يوجد سؤال أطول من صفحة A4 واحدة، وسيُقصّ الجزء الزائد منه عند الطباعة. هل تريد المتابعة؟')) return;
   window.print();
 }
 var __origTitle = document.title;
@@ -1463,7 +1466,9 @@ function getInlineCss(f) { return `font-size:${f.size}; font-weight:${f.bold ? '
                 var imgHtmlWord = '';
                 if (q.imgUrl) {
                     var alignWord = q.imgAlign === 'right' ? 'right' : (q.imgAlign === 'left' ? 'left' : 'center');
-                    imgHtmlWord = '<div style="text-align:' + alignWord + '; margin:4pt 0;"><img src="' + q.imgUrl + '" width="' + (q.imgWidth || 150) + '" style="width:' + (q.imgWidth || 150) + 'pt; height:auto;" /></div>';
+                    /* العرض مخزّن بالبكسل كما في المعاينة؛ نحوّله إلى pt ونمنعه من تجاوز عرض الصفحة */
+                    var imgPt = Math.min(Math.round((+q.imgWidth || 150) * 0.75), 480);
+                    imgHtmlWord = '<div style="text-align:' + alignWord + '; margin:4pt 0;"><img src="' + q.imgUrl + '" width="' + Math.round(imgPt / 0.75) + '" style="width:' + imgPt + 'pt; height:auto;" /></div>';
                 }
                 var pos = q.imgPos || 'afterNote';
                 questionsHtml += '<div style="' + borderBottom + '"><table style="width:100%; border-collapse:collapse;"><tr><td style="text-align:' + (dir === 'rtl' ? 'right' : 'left') + ';"><span style="' + qCss + '">' + escT(q.title) + '</span></td>' + (q.score ? '<td style="font-family:' + fontFamily + '; font-size:14px; font-weight:bold; text-align:' + (dir === 'rtl' ? 'left' : 'right') + '; width:55pt; white-space:nowrap;">' + escT(q.score) + '</td>' : '') + '</tr></table>' + (pos === 'beforeNote' ? imgHtmlWord : '') + (q.note ? '<div style="text-align:center; margin:4pt 0;"><span style="' + noteCss + '">' + escT(q.note) + '</span></div>' : '') + (pos === 'afterNote' ? imgHtmlWord : '') + passageHTML(q, cw) + subsHtml + tailAns(q, cw) + (pos === 'afterSub' ? imgHtmlWord : '') + '</div>';
