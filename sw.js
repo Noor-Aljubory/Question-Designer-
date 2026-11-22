@@ -1,4 +1,4 @@
-const CACHE_NAME = 'exam-designer-pwa-v3';
+const CACHE_NAME = 'exam-designer-pwa-v4';
 const CORE_ASSETS = [
   './',
   './index.html',
